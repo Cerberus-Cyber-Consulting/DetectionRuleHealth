@@ -1,0 +1,121 @@
+{
+  "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#security/incidents(alerts())",
+  "value": [
+    {
+      "id": "1001",
+      "displayName": "Office spawned encoded PowerShell on one endpoint",
+      "severity": "high",
+      "status": "resolved",
+      "classification": "truePositive",
+      "determination": "malware",
+      "createdDateTime": "2026-10-04T11:00:00Z",
+      "lastUpdateDateTime": "2026-10-05T12:00:00Z",
+      "redirectIncidentId": null,
+      "alerts": [
+        {
+          "id": "da1001",
+          "title": "Office spawned encoded PowerShell",
+          "detectionSource": "customDetection",
+          "serviceSource": "microsoftDefenderForEndpoint",
+          "detectorId": "office-encoded-powershell",
+          "createdDateTime": "2026-10-04T11:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "1002",
+      "displayName": "Rare LSASS access and break-glass sign-in",
+      "severity": "medium",
+      "status": "inProgress",
+      "classification": "unknown",
+      "createdDateTime": "2026-10-10T12:00:00Z",
+      "lastUpdateDateTime": "2026-10-11T08:00:00Z",
+      "alerts": [
+        {
+          "id": "da1002",
+          "title": "Rare LSASS access",
+          "detectionSource": "customDetection",
+          "serviceSource": "microsoftDefenderForEndpoint",
+          "detectorId": "0e5c2a39-internal-detector",
+          "createdDateTime": "2026-10-10T12:00:00Z"
+        },
+        {
+          "id": "sa1002",
+          "title": "Break-glass account sign-in",
+          "detectionSource": "nrtAlerts",
+          "serviceSource": "microsoftSentinel",
+          "detectorId": "a1b2c3d4-0000-4000-8000-000000000002",
+          "createdDateTime": "2026-10-10T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "1003",
+      "displayName": "Merged incident",
+      "severity": "medium",
+      "status": "redirected",
+      "redirectIncidentId": "1002",
+      "classification": "unknown",
+      "createdDateTime": "2026-10-03T12:00:00Z",
+      "lastUpdateDateTime": "2026-10-03T12:05:00Z",
+      "alerts": []
+    },
+    {
+      "id": "1004",
+      "displayName": "Sentinel-only incident",
+      "severity": "low",
+      "status": "active",
+      "classification": "unknown",
+      "createdDateTime": "2026-10-06T12:00:00Z",
+      "lastUpdateDateTime": "2026-10-06T12:00:00Z",
+      "alerts": [
+        {
+          "id": "sa1004",
+          "title": "Suspicious PowerShell download",
+          "detectionSource": "scheduledAlerts",
+          "serviceSource": "microsoftSentinel",
+          "detectorId": "73e01a99-5cd7-4139-a149-9f2736ff2ab5",
+          "createdDateTime": "2026-10-06T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "1005",
+      "displayName": "Custom detection with a dynamic title",
+      "severity": "informational",
+      "status": "resolved",
+      "classification": "someNewVerdict",
+      "createdDateTime": "2026-10-07T12:00:00Z",
+      "lastUpdateDateTime": "2026-10-07T13:00:00Z",
+      "alerts": [
+        {
+          "id": "da1005",
+          "title": "Encoded PowerShell on HOST-042",
+          "detectionSource": "customDetection",
+          "serviceSource": "microsoftDefenderForEndpoint",
+          "detectorId": "ffffffff-unknown",
+          "createdDateTime": "2026-10-07T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "id": "1006",
+      "displayName": "Linked by title only",
+      "severity": "low",
+      "status": "active",
+      "classification": "unknown",
+      "createdDateTime": "2026-10-08T12:00:00Z",
+      "lastUpdateDateTime": "2026-10-08T12:00:00Z",
+      "alerts": [
+        {
+          "id": "da1006",
+          "title": "Status rule alert",
+          "detectionSource": "customDetection",
+          "serviceSource": "microsoftDefenderForEndpoint",
+          "detectorId": "11111111-no-such-detector",
+          "createdDateTime": "2026-10-08T12:00:00Z"
+        }
+      ]
+    }
+  ]
+}

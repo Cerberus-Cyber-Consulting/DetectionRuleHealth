@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/update-check.schema.json",
+  "title": "Update check cache (<data>/.app/update-check.json, app state, not tenant data)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "checkedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "etag": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "ETag of the last GitHub answer, sent back as If-None-Match"
+    },
+    "latestStable": {
+      "$ref": "#/$defs/release"
+    },
+    "latest": {
+      "$ref": "#/$defs/release",
+      "description": "Newest release including prereleases; offered only to users running a prerelease"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "checkedAt"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "release": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        },
+        "publishedAt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time"
+        },
+        "notes": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "First 500 characters of the release notes"
+        }
+      },
+      "required": [
+        "version",
+        "url"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

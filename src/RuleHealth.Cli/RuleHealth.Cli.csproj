@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>RuleHealth.Cli</RootNamespace>
+    <AssemblyName>rulehealth</AssemblyName>
+    <!-- No rulehealth.exe: application-control policies (Smart App Control, AppLocker) block freshly
+         built unsigned executables. Without an apphost, `dotnet run` and `dotnet rulehealth.dll`
+         start through the signed dotnet.exe instead. -->
+    <UseAppHost>false</UseAppHost>
+    <!-- The chiseled container image has no ICU. Compare strings ordinally everywhere. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RuleHealth.Core\RuleHealth.Core.csproj" />
+  </ItemGroup>
+
+</Project>

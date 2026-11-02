@@ -1,0 +1,216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/selections.schema.json",
+  "title": "The user's decisions per check (written by the UI through PUT, read by `validate`)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "decisions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[0-9a-f]{16}$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "enum": [
+              "validate",
+              "ignore"
+            ],
+            "description": "validate = must always be present in normal telemetry; ignore = only expected during attacks / not useful"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "check": {
+            "type": "object",
+            "description": "Copy of the check so the decision stays readable if it disappears from candidates.json",
+            "properties": {
+              "table": {
+                "type": "string"
+              },
+              "column": {
+                "type": "string"
+              },
+              "path": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "operatorClass": {
+                "enum": [
+                  "eq",
+                  "eq_ci",
+                  "has",
+                  "has_cs",
+                  "contains",
+                  "contains_cs",
+                  "startswith",
+                  "startswith_cs",
+                  "endswith",
+                  "endswith_cs",
+                  "hasprefix",
+                  "hasprefix_cs",
+                  "hassuffix",
+                  "hassuffix_cs",
+                  "regex",
+                  "like",
+                  "like_cs"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "column",
+              "path",
+              "operatorClass",
+              "value"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "state",
+          "decidedAt",
+          "check"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ruleStatuses": {
+      "type": "object",
+      "description": "Per rule: the user marked it OK although some of its values were absent (health 'manual OK'). Covers only the problem checks listed; a new absent value shows the real status again.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "const": "ok"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decidedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "coveredCheckIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{16}$"
+            },
+            "description": "The rule's checks that were absent / table-empty / error / dead exclusions when it was marked OK"
+          }
+        },
+        "required": [
+          "state",
+          "decidedAt",
+          "coveredCheckIds"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ruleCategories": {
+      "type": "object",
+      "description": "Per rule: the issue categories the user filed it under, for reporting (e.g. 'Incorrect filtering', 'Missing events', 'Validation needed'). Saved by the UI when a category is toggled.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "categories": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 60
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "categories",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ruleNotes": {
+      "type": "object",
+      "description": "Per rule: investigation notes, a track record of what was looked at and decided. Saved by the UI when a note is added or deleted.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9-]{1,40}$"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "author": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 100
+            },
+            "createdAt": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "id",
+            "text",
+            "createdAt"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "updatedAt",
+    "decisions"
+  ],
+  "additionalProperties": false
+}

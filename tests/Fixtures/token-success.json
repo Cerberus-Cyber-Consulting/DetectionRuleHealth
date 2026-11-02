@@ -1,0 +1,9 @@
+{
+  "token_type": "Bearer",
+  "scope": "https://graph.microsoft.com/CustomDetection.Read.All https://graph.microsoft.com/SecurityIncident.Read.All",
+  "expires_in": 4523,
+  "ext_expires_in": 4523,
+  "access_token": "fake-graph-access-token",
+  "refresh_token": "fake-refresh-token-1",
+  "id_token": "{{id_token}}"
+}

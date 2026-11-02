@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/rule-stats.schema.json",
+  "title": "Per-rule efficacy computed by the engine from incidents.json",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string",
+      "description": "Tenant alias = folder name under data/"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "to": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "days": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "days"
+      ],
+      "additionalProperties": false
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "incidents": {
+            "type": "integer"
+          },
+          "open": {
+            "type": "integer"
+          },
+          "closed": {
+            "type": "integer"
+          },
+          "tp": {
+            "type": "integer"
+          },
+          "bp": {
+            "type": "integer"
+          },
+          "fp": {
+            "type": "integer"
+          },
+          "undetermined": {
+            "type": "integer"
+          },
+          "tpRate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "tp / (tp+bp+fp); null when the denominator is 0"
+          },
+          "bpRate": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "fpRate": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "undeterminedRate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "description": "undetermined / closed"
+          },
+          "sharedIncidents": {
+            "type": "integer",
+            "description": "Incidents this rule shares with other rules (counted for each rule)"
+          },
+          "lastIncidentAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ruleId",
+          "incidents",
+          "open",
+          "closed",
+          "tp",
+          "bp",
+          "fp",
+          "undetermined",
+          "tpRate",
+          "bpRate",
+          "fpRate",
+          "undeterminedRate",
+          "sharedIncidents",
+          "lastIncidentAt"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "generatedAt",
+    "window",
+    "rules"
+  ],
+  "additionalProperties": false
+}

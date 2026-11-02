@@ -1,0 +1,237 @@
+/* ============================================================
+   Cerberus Cyber Consulting — brand tokens (docs site copy of ui/brand/cerberus-tokens.css)
+   Source of truth: design/cerberus/colors_and_type.css (Claude Design export, 2026-10-26).
+   Changes vs the source, nothing else:
+     - JetBrains Mono is served from ./fonts (no CDN at runtime; customer data stays local)
+     - the italic Montserrat face is dropped (the product UI does not use italics)
+   Do not add product-specific tokens here: they belong in rulehealth-theme.css.
+   ============================================================ */
+
+@font-face {
+  font-family: "Montserrat";
+  src: url("../fonts/Montserrat-VariableFont_wght.ttf") format("truetype-variations"),
+       url("../fonts/Montserrat-VariableFont_wght.ttf") format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* JetBrains Mono — the "machine voice" (telemetry, KQL, values, ids). Self-hosted, OFL. */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/jetbrains-mono-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/jetbrains-mono-latin-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../fonts/jetbrains-mono-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---------- BRAND CORE PALETTE ---------- */
+  --carbon-black:  #1B1E23; /* Primary  — backgrounds, ink, the "guard" */
+  --abyss-blue:    #123A5A; /* Secondary — brand blue, headers, fills */
+  --sentinel-blue: #1F6AA5; /* Tertiary — interactive accent, links, focus */
+  --bone-grey:     #E6E6E3; /* Light — page surfaces on dark, "white" */
+  --jungle-green:  #498467; /* Extra — success, secure, positive states */
+
+  /* ---------- CARBON SCALE (neutral / ink) ---------- */
+  --carbon-900: #131519;
+  --carbon-800: #1B1E23; /* = carbon-black */
+  --carbon-700: #262A31;
+  --carbon-600: #353A44;
+  --carbon-500: #4A515E;
+  --carbon-400: #6B7280;
+  --carbon-300: #9AA1AC;
+  --carbon-200: #C4C8CE;
+  --carbon-100: #E0E2E5;
+  --carbon-050: #F2F3F4;
+
+  /* ---------- ABYSS / SENTINEL BLUE SCALE ---------- */
+  --blue-900: #0C2638;
+  --blue-800: #123A5A; /* = abyss-blue */
+  --blue-700: #18507C;
+  --blue-600: #1F6AA5; /* = sentinel-blue */
+  --blue-500: #2B82C4;
+  --blue-400: #4F9BD6;
+  --blue-300: #84B9E3;
+  --blue-200: #BBD8F0;
+  --blue-100: #E3EFF9;
+
+  /* ---------- BONE SCALE (light surfaces) ---------- */
+  --bone-500: #C9C9C4;
+  --bone-400: #D7D7D2;
+  --bone-300: #E6E6E3; /* = bone-grey */
+  --bone-200: #EFEFEC;
+  --bone-100: #F7F7F5;
+  --bone-000: #FCFCFB;
+
+  /* ---------- GREEN SCALE (secure / success) ---------- */
+  --green-700: #2F6049;
+  --green-600: #498467; /* = jungle-green */
+  --green-500: #5C9E7E;
+  --green-300: #A6CCBA;
+  --green-100: #E4F0EA;
+
+  /* ---------- SEMANTIC: STATUS ---------- */
+  --status-secure:   var(--jungle-green);
+  --status-info:     var(--sentinel-blue);
+  --status-warning:  #C7892F; /* amber, harmonized to palette */
+  --status-critical: #B5443B; /* red, harmonized to palette */
+
+  /* ---------- SEMANTIC: SURFACES (light theme) ---------- */
+  --bg-page:       var(--bone-200);
+  --bg-surface:    var(--bone-000);
+  --bg-raised:     #FFFFFF;
+  --bg-sunken:     var(--bone-300);
+
+  /* ---------- SEMANTIC: SURFACES (dark theme) ---------- */
+  --bg-page-dark:    var(--carbon-900);
+  --bg-surface-dark: var(--carbon-800);
+  --bg-raised-dark:  var(--carbon-700);
+
+  /* ---------- SEMANTIC: FOREGROUND ---------- */
+  --fg1: var(--carbon-800);  /* primary text on light */
+  --fg2: var(--carbon-500);  /* secondary text */
+  --fg3: var(--carbon-400);  /* muted / captions */
+  --fg-on-dark-1: var(--bone-100);
+  --fg-on-dark-2: var(--carbon-300);
+  --fg-brand:     var(--abyss-blue);
+  --fg-accent:    var(--sentinel-blue);
+
+  /* ---------- BORDERS / LINES ---------- */
+  --border-1: rgba(27,30,35,0.10);
+  --border-2: rgba(27,30,35,0.18);
+  --border-strong: rgba(27,30,35,0.32);
+  --border-on-dark: rgba(230,230,227,0.12);
+
+  /* ---------- FOCUS RING ---------- */
+  --focus-ring: 0 0 0 3px rgba(31,106,165,0.40);
+
+  /* ============================================================
+     TYPOGRAPHY
+     ============================================================ */
+  --font-sans: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Weights */
+  --w-regular: 400; /* @kind font */
+  --w-medium:  500; /* @kind font */
+  --w-semibold:600; /* @kind font */
+  --w-bold:    700; /* @kind font */
+  --w-extra:   800; /* @kind font */
+
+  /* Type scale (1.250 major-third-ish, tuned) */
+  --text-xs:   12px;
+  --text-sm:   14px;
+  --text-base: 16px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --text-3xl:  36px;
+  --text-4xl:  46px;
+  --text-5xl:  60px;
+  --text-6xl:  76px;
+
+  --leading-tight: 1.1;
+  --leading-snug:  1.25;
+  --leading-normal:1.5;
+  --leading-loose: 1.7;
+
+  /* Brand display/eyebrow tracking — wide tracking is a Cerberus signature */
+  --tracking-wide:  0.08em;
+  --tracking-wider: 0.16em;
+  --tracking-eyebrow: 0.22em;
+
+  /* ---------- RADII ---------- */
+  --radius-xs: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---------- SPACING (4px base) ---------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  /* ---------- SHADOWS (cool, carbon-tinted) ---------- */
+  --shadow-sm: 0 1px 2px rgba(19,21,25,0.08), 0 1px 1px rgba(19,21,25,0.04);
+  --shadow-md: 0 4px 12px rgba(19,21,25,0.10), 0 1px 3px rgba(19,21,25,0.06);
+  --shadow-lg: 0 12px 32px rgba(19,21,25,0.16), 0 2px 8px rgba(19,21,25,0.08);
+  --shadow-glow-blue: 0 0 0 1px rgba(31,106,165,0.30), 0 8px 28px rgba(31,106,165,0.22);
+}
+
+/* ============================================================
+   SEMANTIC ELEMENT DEFAULTS
+   ============================================================ */
+.cb-h1 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-extra);
+  font-size: var(--text-5xl);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
+  color: var(--fg1);
+}
+.cb-h2 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-bold);
+  font-size: var(--text-3xl);
+  line-height: var(--leading-snug);
+  letter-spacing: -0.005em;
+  color: var(--fg1);
+}
+.cb-h3 {
+  font-family: var(--font-sans);
+  font-weight: var(--w-bold);
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+  color: var(--fg1);
+}
+.cb-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: var(--w-bold);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--fg-accent);
+}
+.cb-body {
+  font-family: var(--font-sans);
+  font-weight: var(--w-regular);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--fg1);
+}
+.cb-small {
+  font-family: var(--font-sans);
+  font-weight: var(--w-medium);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+  color: var(--fg2);
+}
+.cb-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  color: var(--fg1);
+}

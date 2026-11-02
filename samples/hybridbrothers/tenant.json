@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "alias": "hybridbrothers",
+  "displayName": "HybridBrothers public rules (offline sample)",
+  "auth": {
+    "mode": "offline"
+  },
+  "defaults": {
+    "incidentDays": 90,
+    "validationDays": 30
+  },
+  "demo": true
+}

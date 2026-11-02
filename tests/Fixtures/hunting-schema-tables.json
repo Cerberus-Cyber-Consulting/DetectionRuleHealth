@@ -1,0 +1,37 @@
+{
+  "@odata.context": "https://graph.microsoft.com/beta/$metadata#Collection(microsoft.graph.security.huntingSchemaTable)",
+  "value": [
+    {
+      "name": "DeviceProcessEvents",
+      "description": "Process creation and related events",
+      "columns": [
+        { "name": "Timestamp", "dataType": "DateTime", "description": "Date and time when the event was recorded" },
+        { "name": "ActionType", "dataType": "String", "description": "Type of activity that triggered the event" },
+        { "name": "FileName", "dataType": "String", "description": "" },
+        { "name": "InitiatingProcessFileName", "dataType": "String", "description": "" },
+        { "name": "ProcessCommandLine", "dataType": "String", "description": "" },
+        { "name": "ProcessId", "dataType": "Int64", "description": "" },
+        { "name": "AdditionalFields", "dataType": "Dynamic", "description": "" },
+        { "name": "IsElevated", "dataType": "Boolean", "description": "" },
+        { "name": "Embedding", "dataType": "Vector16", "description": "" }
+      ]
+    },
+    {
+      "name": "SigninLogs",
+      "description": "Sentinel table seen through advanced hunting",
+      "columns": [
+        { "name": "TimeGenerated", "dataType": "DateTime" },
+        { "name": "UserPrincipalName", "dataType": "String" },
+        { "name": "Location", "dataType": "String" }
+      ]
+    },
+    {
+      "name": "DeviceEvents",
+      "columns": [
+        { "name": "Timestamp", "dataType": "DateTime" },
+        { "name": "ActionType", "dataType": "String" },
+        { "name": "Score", "dataType": "Vector16" }
+      ]
+    }
+  ]
+}

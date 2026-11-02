@@ -1,0 +1,2059 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detection Rule Health</title>
+  <link rel="icon" href="/ui/brand/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/ui/brand/cerberus-tokens.css">
+  <link rel="stylesheet" href="/ui/brand/rulehealth-theme.css">
+  <link rel="stylesheet" href="/ui/styles.css">
+  <!-- Pinned local copies, no CDN at runtime: customer data never leaves the machine.
+       Alpine is deferred, so it starts after app.js has registered the component (alpine:init). -->
+  <script defer src="/ui/vendor/alpine-3.14.9.min.js"></script>
+  <script src="/ui/vendor/echarts-5.6.0.min.js"></script>
+  <script src="/ui/vendor/lucide-1.52.0.min.js"></script>
+  <script src="/ui/brand/echarts-cerberus.js"></script>
+  <script src="/ui/charts.js"></script>
+  <script src="/ui/app.js"></script>
+</head>
+<body x-data="app">
+<div class="rh-app">
+
+  <!-- ============================================================ SIDEBAR (Watch Console) -->
+  <aside class="rh-sidebar">
+    <div class="rh-brand">
+      <img src="/ui/brand/img/favicon.svg" alt="">
+      <div>
+        <div class="rh-brand-name">Detection Rule Health</div>
+      </div>
+    </div>
+    <nav class="rh-nav" aria-label="Views">
+      <template x-if="tenants.length">
+        <div class="rh-nav">
+          <div class="rh-nav-group">Monitor</div>
+          <a class="rh-nav-item" href="#/overview" :class="{ 'is-active': route.view === 'overview' }"
+             :aria-current="route.view === 'overview' ? 'page' : null"><i x-icon="'layout-dashboard'"></i>Overview</a>
+          <a class="rh-nav-item" href="#/rules" :class="{ 'is-active': route.view === 'rules' }"
+             :aria-current="route.view === 'rules' ? 'page' : null"><i x-icon="'list-checks'"></i>Rules</a>
+          <div class="rh-nav-group">Validate</div>
+          <a class="rh-nav-item" href="#/checks" :class="{ 'is-active': route.view === 'checks' }"
+             :aria-current="route.view === 'checks' ? 'page' : null"><i x-icon="'scan-line'"></i>Value checks
+            <span class="rh-nav-badge" x-show="docs.candidates && unreviewedCount" x-text="unreviewedCount" title="Validatable values not reviewed yet"></span></a>
+          <a class="rh-nav-item" href="#/validation" :class="{ 'is-active': route.view === 'validation' }"
+             :aria-current="route.view === 'validation' ? 'page' : null"><i x-icon="'shield-check'"></i>Validation
+            <span class="rh-nav-badge is-crit" x-show="absentCount" x-text="absentCount" title="Values absent in the last validation"></span></a>
+          <div class="rh-nav-group">Pipeline</div>
+          <a class="rh-nav-item" href="#/data" :class="{ 'is-active': route.view === 'data' }"
+             :aria-current="route.view === 'data' ? 'page' : null"><i x-icon="'database-zap'"></i>Data
+            <span class="rh-nav-pulse" x-show="jobRunning" aria-hidden="true"></span>
+</a>
+          <a class="rh-nav-item" href="#/settings" :class="{ 'is-active': route.view === 'settings' }"
+             :aria-current="route.view === 'settings' ? 'page' : null"><i x-icon="'settings'"></i>Settings</a>
+          <span class="rh-sr-only" role="status" x-text="jobRunning && job ? `${jobLabel(job.kind)} is running` : ''"></span>
+        </div>
+      </template>
+    </nav>
+    <div class="rh-side-foot">
+      <div class="rh-tenant">
+        <span class="rh-tenant-label">Tenant</span>
+        <label class="rh-select" x-show="tenants.length">
+          <select x-ref="tenantSelect" aria-label="Tenant" :title="tenantName" @change="loadTenant($event.target.value)">
+            <template x-for="t in tenants" :key="t.alias">
+              <option :value="t.alias" x-text="t.demo ? `${t.displayName} (demo)` : t.displayName" :selected="t.alias === tenant"></option>
+            </template>
+          </select>
+        </label>
+        <span class="rh-tenant-id" x-show="tenantIdLine" x-text="tenantIdLine"></span>
+        <a class="rh-btn rh-btn--ghost rh-btn--sm rh-add-tenant" href="#/setup" @click.prevent="startNewTenant()"
+           :aria-current="route.view === 'setup' ? 'page' : null"><i x-icon="'plus'"></i>Add tenant</a>
+      </div>
+    </div>
+  </aside>
+
+  <main class="rh-main">
+    <!-- ============================================================ TOPBAR -->
+    <header class="rh-topbar">
+      <div class="rh-topbar-l">
+        <h1 class="rh-h1" x-text="viewTitle"></h1>
+        <template x-if="route.view === 'setup'">
+          <ol class="rh-stepper" aria-label="Setup steps">
+            <template x-for="(s, i) in setupSteps" :key="s.key">
+              <li class="rh-stepper-item" :class="stepState(i)" :aria-current="i === setupIndex ? 'step' : null">
+                <template x-if="stepHref(i)">
+                  <a :href="stepHref(i)" class="rh-stepper-link"><span class="rh-stepper-num"><i x-icon="'check'"></i></span><span class="rh-stepper-label" x-text="s.label"></span></a>
+                </template>
+                <template x-if="!stepHref(i)">
+                  <span class="rh-stepper-link"><span class="rh-stepper-num"><template x-if="i < setupIndex"><i x-icon="'check'"></i></template><span x-show="i >= setupIndex" x-text="i + 1"></span></span><span class="rh-stepper-label" x-text="s.label"></span></span>
+                </template>
+                <span class="rh-sr-only" x-text="i < setupIndex ? '(done)' : i === setupIndex ? '(current step)' : ''"></span>
+              </li>
+            </template>
+          </ol>
+        </template>
+        <span class="rh-chip is-empty" x-show="isDemo && route.view !== 'setup'" x-cloak><i x-icon="'flask-conical'"></i>Demo data</span>
+        <span class="rh-chip tone-neutral" x-show="dataAge" x-cloak title="When the rules were last collected">Collected <span class="rh-mono" x-text="dataAge"></span></span>
+      </div>
+      <div class="rh-topbar-r">
+        <!-- Update check (rulehealth-release): a quiet hint, never an automatic update. -->
+        <template x-if="appInfo?.update">
+          <a class="rh-chip tone-info rh-update-chip" href="#/settings" :title="`Detection Rule Health ${appInfo.update.latest} is available; you run ${appInfo.update.current}. Settings shows how to upgrade.`">
+            <i x-icon="'circle-arrow-up'"></i><span x-text="`Version ${appInfo.update.latest} available`"></span></a>
+        </template>
+        <span class="rh-small" x-show="dirty" x-cloak x-text="`${changedCount} unsaved change${changedCount === 1 ? '' : 's'}`"></span>
+        <button type="button" class="rh-btn rh-btn--sm" :class="dirty ? 'rh-btn--primary' : 'rh-btn--ghost'"
+                x-show="dirty || (route.view === 'checks' && docs.candidates) || (route.view === 'rules' && route.param)" x-cloak
+                :disabled="!dirty || saving" @click="save()"><i x-icon="'save'"></i><span x-text="saving ? 'Saving…' : 'Save decisions'"></span></button>
+      </div>
+    </header>
+
+    <div class="rh-content">
+    <div class="rh-banner is-demo" x-show="isDemo && route.view !== 'setup'" x-cloak role="status"><i x-icon="'flask-conical'"></i>
+      <div>Demo data — not from a real tenant<span x-show="isReadOnly">, read-only</span>. <a href="#/setup" @click.prevent="startNewTenant()">Connect your own tenant</a></div></div>
+    <!-- The last sign-in or consent result; the wizard shows it inside its sign-in step instead. -->
+    <template x-if="signInNotice && route.view !== 'setup'">
+      <div class="rh-banner" :class="signInNotice.ok ? 'is-info' : 'is-crit'" role="status">
+        <i x-icon="signInNotice.ok ? 'log-in' : 'octagon-x'"></i>
+        <div>
+          <template x-if="signInNotice.ok"><div x-text="signInNotice.message"></div></template>
+          <template x-if="!signInNotice.ok">
+            <div><b>Sign-in failed</b>
+              <div class="rh-pre" x-text="signInNotice.hint ?? signInNotice.message"></div>
+              <div class="rh-small rh-mono rh-mt-xs" x-show="signInNotice.hint" x-text="signInNotice.message"></div>
+              <div class="rh-small rh-mt-xs">
+                <span class="rh-mono" x-show="signInNotice.code" x-text="signInNotice.code"></span><span x-show="signInNotice.correlationId"> · correlation ID <span class="rh-mono" x-text="signInNotice.correlationId"></span></span>
+                <span x-show="signInNotice.code || signInNotice.correlationId"> · </span><a :href="docsUrl('troubleshooting/#sign-in-errors')" target="_blank" rel="noopener">Troubleshooting</a></div></div>
+          </template>
+        </div>
+        <button type="button" class="rh-link rh-link--quiet" @click="signInNotice = null" aria-label="Dismiss"><i x-icon="'x'"></i></button>
+      </div>
+    </template>
+    <div class="rh-banner is-warn" x-show="signedOut && docs.rules && ['overview', 'data', 'validation'].includes(route.view)" x-cloak role="status"><i x-icon="'log-out'"></i>
+      <div>Signed out. Sign in to collect new data; existing results stay available.
+        <button type="button" class="rh-link" @click="signIn(tenant, 'data')">Sign in</button></div></div>
+    <div class="rh-banner is-warn" x-show="needsReconnect && ['overview', 'data', 'validation', 'settings'].includes(route.view)" x-cloak role="status"><i x-icon="'plug'"></i>
+      <div>This tenant was added with a sign-in this version no longer supports (Azure CLI). Connect it again, with your own
+        app registration or with Microsoft's apps; the collected data and your decisions stay.
+        <button type="button" class="rh-link" @click="reconnectTenant()">Connect again</button></div></div>
+    <div class="rh-banner is-info" x-show="saveMessage" x-cloak role="status"><i x-icon="'check'"></i><div x-text="saveMessage"></div></div>
+    <div class="rh-banner is-crit" x-show="saveError" x-cloak role="alert"><i x-icon="'octagon-x'"></i><div x-text="saveError"></div></div>
+    <div class="rh-banner is-crit" x-show="error" x-cloak role="alert"><i x-icon="'octagon-x'"></i><div x-text="error"></div></div>
+    <div class="rh-empty" x-show="loading"><strong>Loading</strong>Reading the tenant's files.</div>
+    <template x-if="!loading && !error && !tenant && !['setup', 'settings'].includes(route.view)">
+      <section class="rh-panel"><div class="rh-eyebrow">Get started</div><div class="rh-empty"><strong>No tenant connected yet.</strong>
+        <a class="rh-btn rh-btn--primary rh-mt" href="#/setup" @click.prevent="startNewTenant()"><i x-icon="'plug'"></i>Connect a tenant</a></div></section>
+    </template>
+    <template x-if="!loading && tenant && !docs.rules && ['overview', 'rules'].includes(route.view)">
+      <section class="rh-panel"><div class="rh-eyebrow" x-text="route.view === 'rules' ? 'Rules' : 'Overview'"></div><div class="rh-empty"><strong>No data collected yet.</strong>
+        <span x-text="tenantInfo?.setupStep && tenantInfo.setupStep !== 'done' ? 'Continue the setup to collect rules and incidents from the tenant.' : 'Collect from the tenant to see its rules and incidents.'"></span>
+        <div class="rh-mt">
+          <template x-if="tenantInfo?.setupStep && tenantInfo.setupStep !== 'done'">
+            <a class="rh-btn rh-btn--secondary" :href="`#/setup/${tenantInfo.setupStep}`" @click="setup.alias = tenant"><i x-icon="'arrow-right'"></i>Continue setup</a>
+          </template>
+          <template x-if="!tenantInfo?.setupStep || tenantInfo.setupStep === 'done'">
+            <button type="button" class="rh-btn rh-btn--secondary" :disabled="isOffline" @click="collectNow()"><i x-icon="'refresh-cw'"></i>Collect now</button>
+          </template>
+        </div></div></section>
+    </template>
+
+    <!-- ============================================================ OVERVIEW -->
+    <template x-if="!loading && tenant && docs.rules && route.view === 'overview'">
+      <div class="rh-view">
+        <p class="rh-small rh-view-intro">
+          <span x-text="tenantName"></span>
+          <template x-if="docs.incidents"><span> · incidents <span class="rh-mono" x-text="`${fmtDate(docs.incidents.window.from)} – ${fmtDate(docs.incidents.window.to)}`"></span></span></template>
+        </p>
+
+        <section class="rh-tiles" aria-label="Key figures">
+          <template x-for="k in kpis" :key="k.label">
+            <div class="rh-tile">
+              <div class="rh-tile-icon" :class="k.tone"><i x-icon="k.icon"></i></div>
+              <div class="rh-tile-value" x-text="k.value"></div>
+              <div class="rh-tile-label" x-text="k.label"></div>
+              <div class="rh-tile-sub" x-text="k.context"></div>
+            </div>
+          </template>
+        </section>
+
+        <!-- Rule health over all rules: donut + legend table (its table twin) -->
+        <section class="rh-panel" x-show="ruleHealthBreakdown.total">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Health</div>
+              <h2 class="rh-h2">Rule health</h2>
+              <div class="rh-panel-sub" x-text="docs.validation
+                ? `All ${ruleHealthBreakdown.total} rules, each counted once by the health of all its values · last validation ${fmtDate(docs.validation.runAt)} · click a group for its rules`
+                : 'Not validated yet: mark values in Value checks, then run validation in Data'"></div>
+            </div>
+          </div>
+          <div class="rh-health-overview">
+            <div class="rh-chart rh-chart--donut" x-ref="healthPie" role="img"
+                 :aria-label="`Rule health: ${ruleHealthBreakdown.groups.map(g => `${g.count} ${g.label.toLowerCase()}`).join(', ')}`"></div>
+            <div class="rh-table-wrap">
+              <table class="rh-table rh-health-legend">
+                <thead><tr><th>Health</th><th class="is-num">Rules</th><th class="is-num">Share</th></tr></thead>
+                <tbody>
+                  <template x-for="g in ruleHealthBreakdown.groups" :key="g.key">
+                    <tr :class="{ 'is-clickable': !!healthGroupState(g) }" :title="g.title" @click="showHealthGroupInRules(g)">
+                      <td class="is-primary"><span class="rh-sw" :class="`th-${g.key}`"></span>
+                        <template x-if="healthGroupState(g)"><a href="#/rules" x-text="g.label" @click.stop.prevent="showHealthGroupInRules(g)"></a></template>
+                        <template x-if="!healthGroupState(g)"><span x-text="g.label"></span></template></td>
+                      <td class="is-num" x-text="g.count"></td>
+                      <td class="is-num" x-text="fmtPct(g.count, ruleHealthBreakdown.total)"></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <template x-if="!docs['rule-stats']">
+          <section class="rh-panel">
+            <div class="rh-empty"><strong>No incident statistics yet</strong><a href="#/data">Update from the tenant</a> in Data to see efficacy per rule.</div>
+          </section>
+        </template>
+
+        <template x-if="docs['rule-stats']">
+          <div class="rh-view">
+            <div class="rh-grid-2">
+              <section class="rh-panel">
+                <div class="rh-panel-head">
+                  <div>
+                    <div class="rh-eyebrow">Efficacy</div>
+                    <h2 class="rh-h2">Incidents per rule</h2>
+                    <div class="rh-panel-sub">Top 20 rules by incidents · counts next to every rate · click a bar for the rule</div>
+                  </div>
+                  <div class="rh-tools">
+                    <div class="rh-seg" role="group" aria-label="Scale">
+                      <button type="button" :aria-pressed="(!perRulePercent).toString()" @click="perRulePercent = false; renderCharts()">Count</button>
+                      <button type="button" :aria-pressed="perRulePercent.toString()" @click="perRulePercent = true; renderCharts()">100 %</button>
+                    </div>
+                    <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('perRule')"><i x-icon="showTable.perRule ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.perRule ? 'Chart' : 'Table'"></span></button>
+                  </div>
+                </div>
+                <div class="rh-empty" x-show="!perRuleRows.length"><strong>No incidents in the window</strong>No rule created an incident in this period. Widen the incident window in <a href="#/data">Data</a> and update from the tenant.</div>
+                <div class="rh-chart" x-ref="perRuleChart" x-show="!showTable.perRule && perRuleRows.length"
+                     :style="`height:${Math.max(360, perRuleRows.length * 28 + 56)}px`"></div>
+                <div class="rh-table-wrap" x-show="showTable.perRule">
+                  <table class="rh-table">
+                    <thead><tr><th>Rule</th><th class="is-num">TP</th><th class="is-num">BP</th><th class="is-num">FP</th><th class="is-num">Undet.</th><th class="is-num">Open</th><th class="is-num">Total</th><th>FP rate</th></tr></thead>
+                    <tbody>
+                      <template x-for="r in perRuleRows" :key="r.ruleId">
+                        <tr class="is-clickable" :class="{ 'is-low-n': r.lowN }" @click="go(ruleHref(r.ruleId))">
+                          <td class="is-primary"><a :href="ruleHref(r.ruleId)" x-text="r.name" @click.stop></a></td><td class="is-num" x-text="r.tp"></td><td class="is-num" x-text="r.bp"></td>
+                          <td class="is-num" x-text="r.fp"></td><td class="is-num" x-text="r.undetermined"></td><td class="is-num" x-text="r.open"></td>
+                          <td class="is-num" x-text="r.total"></td><td class="rh-num" x-text="fpText(r) + (r.lowN ? ' · low n' : '')"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section class="rh-panel">
+                <div class="rh-panel-head">
+                  <div>
+                    <div class="rh-eyebrow">Noise map</div>
+                    <h2 class="rh-h2">Volume vs noise</h2>
+                    <div class="rh-panel-sub" title="Noise rate = (BP + FP) / (TP + BP + FP)">Benign + false positives · ≥ 5 classified</div>
+                  </div>
+                  <div class="rh-tools">
+                    <label class="rh-field rh-field--num" title="Noise threshold (BP + FP rate), also used by Needs attention">BP + FP ≥
+                      <input type="number" min="5" max="95" step="5" aria-label="Noise threshold in percent (BP + FP rate)"
+                             :value="Math.round(noiseThreshold * 100)" @change="setThreshold($event.target.value)"> %
+                    </label>
+                    <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('noise')"><i x-icon="showTable.noise ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.noise ? 'Chart' : 'Table'"></span></button>
+                  </div>
+                </div>
+                <div class="rh-empty" x-show="!noisePoints.length"><strong>Not enough classified incidents</strong>No rule has 5 or more classified incidents yet.
+                  Classify closed incidents in Microsoft Sentinel or the Defender portal, then update from the tenant in <a href="#/data">Data</a>.</div>
+                <!-- Same height as the per-rule chart next to it, so the two panels line up. -->
+                <div class="rh-chart" x-ref="noiseChart" x-show="!showTable.noise && noisePoints.length"
+                     :style="`height:${Math.max(360, perRuleRows.length * 28 + 56)}px`"></div>
+                <div class="rh-table-wrap" x-show="showTable.noise">
+                  <table class="rh-table">
+                    <thead><tr><th>Rule</th><th class="is-num">Incidents</th><th>BP + FP rate</th><th class="is-num">BP</th><th class="is-num">FP</th></tr></thead>
+                    <tbody>
+                      <template x-for="p in noisePoints" :key="p.ruleId">
+                        <tr class="is-clickable" @click="go(ruleHref(p.ruleId))">
+                          <td class="is-primary"><a :href="ruleHref(p.ruleId)" x-text="p.name" @click.stop></a></td><td class="is-num" x-text="p.incidents"></td>
+                          <td class="rh-num" x-text="`${fmtPct(p.noise, p.n)} (${p.noise}/${p.n})`"></td>
+                          <td class="is-num" x-text="p.bp"></td><td class="is-num" x-text="p.fp"></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Trend</div>
+                  <h2 class="rh-h2">Incidents over time</h2>
+                  <div class="rh-panel-sub">Per week (Monday, UTC) by classification</div>
+                </div>
+                <div class="rh-tools">
+                  <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('weekly')"><i x-icon="showTable.weekly ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.weekly ? 'Chart' : 'Table'"></span></button>
+                </div>
+              </div>
+              <div class="rh-chart is-medium" x-ref="weeklyChart" x-show="!showTable.weekly"></div>
+              <div class="rh-table-wrap" x-show="showTable.weekly">
+                <table class="rh-table">
+                  <thead><tr><th>Week of</th><th class="is-num">TP</th><th class="is-num">BP</th><th class="is-num">FP</th><th class="is-num">Undet.</th><th class="is-num">Open</th><th class="is-num">Total</th></tr></thead>
+                  <tbody>
+                    <template x-for="w in weeklyRows" :key="w.key">
+                      <tr><td class="rh-mono" x-text="w.key"></td><td class="is-num" x-text="w.tp"></td><td class="is-num" x-text="w.bp"></td><td class="is-num" x-text="w.fp"></td>
+                        <td class="is-num" x-text="w.undetermined"></td><td class="is-num" x-text="w.open"></td><td class="is-num" x-text="w.total"></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Trend per rule</div>
+                  <h2 class="rh-h2">Incidents per rule over time</h2>
+                  <div class="rh-panel-sub" x-text="`Incidents created per ${trend.unit === 'week' ? 'week (Monday, UTC)' : 'day (UTC)'} · up to ${maxTrend} rules · click a line for the rule`"></div>
+                </div>
+                <div class="rh-tools">
+                  <div class="rh-seg" role="group" aria-label="Granularity">
+                    <button type="button" :aria-pressed="(trend.unit === 'week').toString()" @click="setTrendUnit('week')">Week</button>
+                    <button type="button" :aria-pressed="(trend.unit === 'day').toString()" @click="setTrendUnit('day')">Day</button>
+                  </div>
+                  <details class="picker" x-ref="trendPicker" @click.outside="$refs.trendPicker.open = false"
+                           @keydown.escape="$refs.trendPicker.open = false">
+                    <summary class="rh-btn rh-btn--ghost rh-btn--sm"><i x-icon="'list-filter'"></i><span x-text="`Rules ${trend.selected.length}/${maxTrend}`"></span></summary>
+                    <div class="picker-panel">
+                      <div class="picker-top">
+                        <label class="rh-search"><i x-icon="'search'"></i><input type="search" placeholder="Filter rules" x-model.debounce.100ms="trend.filter" aria-label="Filter rules"></label>
+                        <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="trendTop(5)">Top 5</button>
+                        <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="trendClear()" :disabled="!trend.selected.length">Clear</button>
+                      </div>
+                      <p class="rh-small rh-mb-xs"
+                         x-text="trend.selected.length >= maxTrend ? `${maxTrend} rules selected. Remove one to add another.` : 'Rules with incidents in the window, most first.'"></p>
+                      <ul>
+                        <template x-for="r in trendCandidates" :key="r.ruleId">
+                          <li>
+                            <label class="rh-check">
+                              <input type="checkbox" :checked="trend.selected.includes(r.ruleId)"
+                                     :disabled="!trend.selected.includes(r.ruleId) && trend.selected.length >= maxTrend"
+                                     @change="toggleTrendRule(r.ruleId)">
+                              <span class="rh-sw is-line" :class="trendSlot(r.ruleId) ? `s${trendSlot(r.ruleId)}` : 'is-off'"></span>
+                              <span class="name" x-text="r.name" :title="r.name"></span>
+                              <span class="rh-num rh-muted" x-text="r.incidents"></span>
+                            </label>
+                          </li>
+                        </template>
+                      </ul>
+                    </div>
+                  </details>
+                  <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('trend')"><i x-icon="showTable.trend ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.trend ? 'Chart' : 'Table'"></span></button>
+                </div>
+              </div>
+              <div class="rh-empty" x-show="!trend.selected.length"><strong>No rules selected</strong>Use <b>Rules</b> to pick up to 8.</div>
+              <div class="rh-chart" x-ref="trendChart" x-show="!showTable.trend && trend.selected.length"></div>
+              <div class="rh-table-wrap" x-show="showTable.trend && trend.selected.length">
+                <table class="rh-table">
+                  <thead>
+                    <tr>
+                      <th x-text="trend.unit === 'week' ? 'Week of' : 'Day'"></th>
+                      <template x-for="s in trendSeries" :key="s.ruleId">
+                        <th class="is-num" :title="s.name">
+                          <span class="rh-sw is-line" :class="`s${s.slot}`"></span>
+                          <span x-text="s.name.length > 28 ? s.name.slice(0, 27) + '…' : s.name"></span>
+                        </th>
+                      </template>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="(b, i) in trendBuckets" :key="b.key">
+                      <tr>
+                        <td class="rh-mono" x-text="b.key"></td>
+                        <template x-for="s in trendSeries" :key="s.ruleId"><td class="is-num" x-text="s.data[i]"></td></template>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <!-- Rules per table: which tables the detections depend on (from extraction) -->
+        <section class="rh-panel" x-show="docs.candidates">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Coverage</div>
+              <h2 class="rh-h2">Rules per table</h2>
+              <div class="rh-panel-sub" x-text="tableRows.length
+                ? `${tableRows.length} table${tableRows.length === 1 ? '' : 's'}${tableRows.length > tableChartLimit && !showTable.tables ? ` · top ${tableChartLimit} by enabled rules` : ''} · each rule split by the health of its values on that table · a rule that reads several tables counts for each · “empty” = no rows in the last validation · click a bar for the rules`
+                : 'No tables found'"></div>
+            </div>
+            <div class="rh-tools" x-show="tableRows.length">
+              <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" x-show="!showTable.tables && tableRows.length > 20"
+                      @click="tableChartLimit = tableChartLimit > 20 ? 20 : tableRows.length; renderCharts()"
+                      x-text="tableChartLimit > 20 ? 'Top 20' : `Show all ${tableRows.length}`"></button>
+              <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('tables')"><i x-icon="showTable.tables ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.tables ? 'Chart' : 'Table'"></span></button>
+            </div>
+          </div>
+          <div class="rh-banner is-warn rh-mb" x-show="tablesFromChecksOnly"><i x-icon="'triangle-alert'"></i>
+            <div>These rules were extracted before Detection Rule Health recorded the tables a query reads, so the tables come from the
+              value checks only: a table a rule only joins or unions without a literal comparison is missing.
+              Run <b>Extract</b> again in <a href="#/data">Data</a> for complete counts.</div>
+          </div>
+          <div class="rh-chart" x-ref="tableChart" x-show="!showTable.tables && tableRows.length"
+               :style="`height:${Math.min(tableRows.length, tableChartLimit) * 26 + 56}px`"></div>
+          <div class="rh-table-wrap" x-show="showTable.tables">
+            <table class="rh-table rh-tables-table">
+              <thead><tr><th>Table</th><th class="is-num" title="Enabled rules; the Microsoft Sentinel / Defender XDR split is in the chart tooltip">Enabled</th>
+                <template x-for="g in tableHealthGroups" :key="g.key">
+                  <th class="is-num" :title="`${g.label}: ${g.title}`"><span class="rh-sw" :class="`th-${g.key}`"></span><span x-text="g.short"></span></th>
+                </template></tr></thead>
+              <tbody>
+                <template x-for="r in tableRows" :key="r.table">
+                  <tr class="is-clickable" @click="showTableInRules(r.table)">
+                    <td class="is-primary rh-mono"><a href="#/rules" x-text="r.table" @click.stop.prevent="showTableInRules(r.table)"></a>
+                      <span class="rh-chip is-empty rh-chip--sm" x-show="r.empty" title="Validation found no rows in this table during its window: connector or retention issue">
+                        <i x-icon="'database'"></i>Table empty</span></td>
+                    <td class="is-num" x-text="r.enabled"></td>
+                    <template x-for="g in tableHealthGroups" :key="g.key"><td class="is-num" x-text="r.health[g.key] || ''"></td></template>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <p class="rh-small rh-mt" x-show="rulesWithoutTable.length">
+            <span x-text="rulesWithoutTable.length === 1 ? '1 rule has a query that reads no known table' : `${rulesWithoutTable.length} rules have a query that reads no known table`"></span>
+            (a table missing from the schema, a DCR <span class="rh-mono">source</span>, or functions only):
+            <template x-for="(r, i) in rulesWithoutTable.slice(0, 5)" :key="r.ruleId">
+              <span><a :href="ruleHref(r.ruleId)" x-text="r.displayName"></a><span x-text="i < Math.min(rulesWithoutTable.length, 5) - 1 ? ', ' : ''"></span></span>
+            </template>
+            <span x-show="rulesWithoutTable.length > 5" x-text="` and ${rulesWithoutTable.length - 5} more`"></span>
+          </p>
+        </section>
+
+        <!-- Issue categories: the rules the user filed under a category, for reporting -->
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Reporting</div>
+              <h2 class="rh-h2">Issue categories</h2>
+              <div class="rh-panel-sub" x-text="categorizedCount
+                ? `${categorizedCount} rule${categorizedCount === 1 ? '' : 's'} classified · click a bar for the rules`
+                : 'Classify a rule in its detail page, under Health'"></div>
+            </div>
+            <div class="rh-tools" x-show="categorizedCount">
+              <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="exportCategoryCsv()" title="One line per rule and category, with health, incidents and the latest note"><i x-icon="'download'"></i>Export CSV</button>
+              <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('categories')"><i x-icon="showTable.categories ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.categories ? 'Chart' : 'Table'"></span></button>
+            </div>
+          </div>
+          <div class="rh-empty" x-show="!categorizedCount"><strong>No rules classified yet</strong>Open a rule and pick a category
+            (Incorrect filtering, Missing events, Validation needed, or your own) to report on it here.</div>
+          <template x-if="categorizedCount">
+            <div>
+              <div class="rh-chart" x-ref="categoryChart" x-show="!showTable.categories"
+                   :style="`height:${categoryReport.length * 36 + 24}px`"></div>
+              <div class="rh-table-wrap" x-show="showTable.categories">
+                <table class="rh-table">
+                  <thead><tr><th>Category</th><th class="is-num">Rules</th><th class="is-num">Enabled</th><th class="is-num">Disabled</th></tr></thead>
+                  <tbody>
+                    <template x-for="g in categoryReport" :key="g.name">
+                      <tr class="is-clickable" @click="showCategoryInRules(g.name)">
+                        <td class="is-primary"><a href="#/rules" x-text="g.name" @click.stop.prevent="showCategoryInRules(g.name)"></a></td><td class="is-num" x-text="g.rows.length"></td>
+                        <td class="is-num" x-text="g.enabled"></td><td class="is-num" x-text="g.rows.length - g.enabled"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+
+              <template x-for="g in categoryReport.filter(g => g.rows.length)" :key="g.name">
+                <div class="category-group">
+                  <div class="rh-group-head"><span class="rh-h2" x-text="g.name"></span><span class="rh-small" x-text="`${g.rows.length} rule${g.rows.length === 1 ? '' : 's'}`"></span></div>
+                  <div class="rh-table-wrap">
+                    <table class="rh-table category-table">
+                      <colgroup><col class="c-health"><col class="c-rule"><col class="c-source"><col class="c-num"><col class="c-date"><col></colgroup>
+                      <thead><tr><th>Health</th><th>Rule</th><th>Source</th><th class="is-num">Incidents</th><th>Since</th><th>Latest note</th></tr></thead>
+                      <tbody>
+                        <template x-for="r in g.rows" :key="r.rule.ruleId">
+                          <tr class="is-clickable" @click="go(ruleHref(r.rule.ruleId))">
+                            <td><span class="rh-chip" :class="healthLook(r.status.key).cls" :title="r.status.title">
+                              <i x-icon="healthLook(r.status.key).icon"></i><span x-text="r.status.label"></span></span></td>
+                            <td class="is-primary"><a :href="ruleHref(r.rule.ruleId)" :title="r.rule.displayName" x-text="r.rule.displayName" @click.stop></a></td>
+                            <td><span class="rh-tag" x-text="sourceTag(r.rule.source)"></span></td>
+                            <td class="is-num" x-text="r.stats ? r.stats.incidents : '—'"></td>
+                            <td class="rh-mono" x-text="fmtDate(r.since)"></td>
+                            <td :title="r.lastNote?.text ?? ''"
+                                x-text="r.lastNote ? `${fmtDate(r.lastNote.createdAt)} · ${r.lastNote.text}` : '—'"></td>
+                          </tr>
+                        </template>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </template>
+            </div>
+          </template>
+        </section>
+
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Watch list</div>
+              <h2 class="rh-h2">Needs attention</h2>
+              <div class="rh-panel-sub" x-text="`${attentionVisible.length} rule${attentionVisible.length === 1 ? '' : 's'} · absent values, noise, bind errors, dead exclusions`"></div>
+            </div>
+            <div class="rh-tools">
+              <label class="rh-check" x-show="silentCount">
+                <input type="checkbox" x-model="showSilent">
+                <span x-text="`Show silent rules (${silentCount})`"></span>
+              </label>
+            </div>
+          </div>
+          <div class="rh-empty" x-show="!attentionVisible.length"><strong>Nothing needs attention</strong>Every enabled rule has its values present and its noise below the threshold.</div>
+          <div class="rh-table-wrap" x-show="attentionVisible.length">
+            <table class="rh-table">
+              <thead><tr><th>Rule</th><th>Source</th><th>Why</th></tr></thead>
+              <tbody>
+                <template x-for="row in attentionVisible" :key="row.rule.ruleId">
+                  <tr class="is-clickable" @click="go(ruleHref(row.rule.ruleId))">
+                    <td class="is-primary"><a :href="ruleHref(row.rule.ruleId)" x-text="row.rule.displayName" @click.stop></a>
+                      <span class="rh-chip tone-neutral rh-chip--sm" x-show="sameNameById[row.rule.ruleId]"
+                            :title="(sameNameById[row.rule.ruleId] ?? []).map(o => `${sourceLabel(o.source)}: ${o.displayName} (${o.enabled ? 'enabled' : 'disabled'})`).join('\n')"
+                            x-text="`Same name ×${(sameNameById[row.rule.ruleId]?.length ?? 0) + 1}`"></span>
+                      <span class="rh-chip tone-neutral rh-chip--sm" x-show="notesBadge(row.rule.ruleId)" :title="notesBadge(row.rule.ruleId)?.title"><i x-icon="'sticky-note'"></i><span x-text="notesBadge(row.rule.ruleId)?.label"></span></span>
+                      <template x-for="c in categoriesOf(row.rule.ruleId)" :key="c"><span class="rh-chip tone-info rh-chip--sm" title="Issue category"><i x-icon="'tag'"></i><span x-text="c"></span></span></template></td>
+                    <td><span class="rh-tag" x-text="sourceTag(row.rule.source)"></span></td>
+                    <td class="rh-chips">
+                      <template x-for="reason in row.reasons" :key="reason.text">
+                        <span class="rh-chip" :class="reasonLook(reason.rank).cls"><i x-icon="reasonLook(reason.rank).icon"></i><span x-text="reason.text"></span></span>
+                      </template>
+                    </td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </template>
+
+    <!-- ============================================================ RULES LIST -->
+    <template x-if="!loading && tenant && docs.rules && route.view === 'rules' && !route.param">
+      <div class="rh-view">
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Detection rules</div>
+              <h2 class="rh-h2" x-text="`${ruleRows.length} of ${docs.rules?.rules.length ?? 0} rules`"></h2>
+              <div class="rh-panel-sub">Microsoft Sentinel analytics rules and Defender XDR custom detections · click a column to sort, a rule for its detail</div>
+            </div>
+          </div>
+
+          <div class="rh-filters" role="search">
+            <label class="rh-search rh-filters-search"><i x-icon="'search'"></i>
+              <input type="search" placeholder="Search name, id or notes" x-model.debounce.150ms="rulesFilter.text" aria-label="Search rules"></label>
+            <label class="rh-select"><select x-model="rulesFilter.source" aria-label="Source">
+              <option value="">All sources</option>
+              <template x-for="s in sources" :key="s"><option :value="s" x-text="sourceLabel(s)"></option></template>
+            </select></label>
+            <label class="rh-select"><select x-model="rulesFilter.enabled" aria-label="Enabled">
+              <option value="">Enabled and disabled</option>
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select></label>
+            <label class="rh-select"><select x-model="rulesFilter.health" aria-label="Health">
+              <option value="">Any health</option>
+              <template x-for="s in ruleStatusCounts" :key="s.key"><option :value="s.key" x-text="`${healthGroupLabel(s.key)} (${s.count})`"></option></template>
+            </select></label>
+            <label class="rh-select"><select x-model="rulesFilter.table" aria-label="Table">
+              <option value="">Any table</option>
+              <template x-for="t in [...tableRows].sort((a, b) => a.table.localeCompare(b.table))" :key="t.table">
+                <option :value="t.table" x-text="`${t.table} (${t.total})`" :selected="rulesFilter.table === t.table"></option>
+              </template>
+            </select></label>
+            <label class="rh-select"><select x-model="rulesFilter.category" aria-label="Issue category">
+              <option value="">Any category</option>
+              <template x-for="c in categoryNames" :key="c"><option :value="c" x-text="c" :selected="rulesFilter.category === c"></option></template>
+              <option :value="noCategory">No category</option>
+            </select></label>
+            <label class="rh-check"><input type="checkbox" x-model="rulesFilter.errors"> Has bind errors</label>
+          </div>
+
+          <!-- Health summary: one chip per state, worst first; click to show only those rules. -->
+          <div class="rh-chips rh-health-strip" x-show="docs.validation" role="group" aria-label="Rules by health">
+            <template x-for="s in ruleStatusCounts.filter(s => s.rank <= 5)" :key="s.key">
+              <button type="button" class="rh-chip" :class="healthLook(s.key).cls" :aria-pressed="(rulesFilter.health === s.key).toString()"
+                      :title="s.title" @click="toggleHealthFilter(s.key)">
+                <i x-icon="healthLook(s.key).icon"></i>
+                <span class="rh-num" x-text="s.count"></span>
+                <span x-text="{ absent: 'with absent values', 'table-empty': 'with an empty table', error: 'with validation errors', 'dead-exclusion': 'with dead exclusions only', 'manual-ok': 'marked OK manually', ok: 'with all values present' }[s.key]"></span>
+              </button>
+            </template>
+            <button type="button" class="rh-link" x-show="rulesFilter.health" @click="rulesFilter.health = ''">Show all</button>
+          </div>
+          <p class="rh-small rh-note" x-show="!docs.validation" x-cloak>
+            Health appears after the first validation: mark values in <a href="#/checks">Value checks</a>, then run validation in <a href="#/data">Data</a>.
+          </p>
+
+          <div class="rh-table-wrap">
+            <table class="rh-table rh-rules-table">
+              <thead>
+                <tr>
+                  <template x-for="h in [
+                      { key: 'status', label: 'Health', title: 'Result of the last validation for this rule\'s values, worst first' },
+                      { key: 'name', label: 'Name' }, { key: 'source', label: 'Source' }, { key: 'enabled', label: 'Enabled' },
+                      { key: 'incidents', label: 'Incidents', num: true }, { key: null, label: 'TP / BP / FP', num: true, nowrap: true },
+                      { key: 'fp', label: 'FP rate' }, { key: 'checks', label: 'Checks', num: true, title: 'Values marked validate / all values' },
+                      { key: 'absent', label: 'Absent', num: true }, { key: 'errors', label: 'Bind errors', num: true }]" :key="h.label">
+                    <th :class="{ 'is-num': h.num, 'is-nowrap': h.nowrap }" :title="h.title ?? ''" :aria-sort="h.key ? ariaSort(h.key) : null">
+                      <template x-if="h.key">
+                        <button type="button" class="rh-sort" @click="sortBy(h.key)"><span x-text="h.label"></span><i x-icon="sortIcon(h.key)"></i></button>
+                      </template>
+                      <template x-if="!h.key"><span x-text="h.label"></span></template>
+                    </th>
+                  </template>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="row in ruleRows" :key="row.rule.ruleId">
+                  <tr class="is-clickable rh-health-row" :class="`h-${row.status.key}`" @click="go(ruleHref(row.rule.ruleId))">
+                    <td><span class="rh-chip" :class="healthLook(row.status.key).cls" :title="row.status.title">
+                      <i x-icon="healthLook(row.status.key).icon"></i><span x-text="row.status.label"></span></span></td>
+                    <td class="is-primary"><a :href="ruleHref(row.rule.ruleId)" x-text="row.rule.displayName" @click.stop></a>
+                      <span class="rh-chip tone-neutral rh-chip--sm" x-show="sameNameById[row.rule.ruleId]"
+                            :title="(sameNameById[row.rule.ruleId] ?? []).map(o => `${sourceLabel(o.source)}: ${o.displayName} (${o.enabled ? 'enabled' : 'disabled'})`).join('\n')"
+                            x-text="`Same name ×${(sameNameById[row.rule.ruleId]?.length ?? 0) + 1}`"></span>
+                      <span class="rh-chip tone-neutral rh-chip--sm" x-show="notesBadge(row.rule.ruleId)" :title="notesBadge(row.rule.ruleId)?.title"><i x-icon="'sticky-note'"></i><span x-text="notesBadge(row.rule.ruleId)?.label"></span></span>
+                      <template x-for="c in categoriesOf(row.rule.ruleId)" :key="c"><span class="rh-chip tone-info rh-chip--sm" title="Issue category"><i x-icon="'tag'"></i><span x-text="c"></span></span></template></td>
+                    <td><span class="rh-tag" x-text="sourceTag(row.rule.source)"></span></td>
+                    <td x-text="enabledText(row.rule)"></td>
+                    <td class="is-num" x-text="row.stats ? row.stats.incidents : '—'"></td>
+                    <td class="is-num" :class="{ 'is-low-n-cell': row.health.n && row.health.n < 5 }" x-text="row.stats ? `${row.stats.tp} / ${row.stats.bp} / ${row.stats.fp}` : '—'"></td>
+                    <td class="is-num is-wrap" :class="{ 'is-low-n-cell': row.health.n && row.health.n < 5 }"><span x-text="fpText(row.stats)"></span><span class="rh-small" x-show="row.health.n && row.health.n < 5"> · low n</span></td>
+                    <td class="is-num" x-text="`${row.health.validate} / ${row.health.checks}`"></td>
+                    <td class="is-num" x-text="row.health.absent || ''"></td>
+                    <td class="is-num" x-text="row.health.bindErrors || ''"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <div class="rh-empty" x-show="!ruleRows.length"><strong>No rules match the filters</strong>Clear a filter or the search to see more rules.</div>
+        </section>
+      </div>
+    </template>
+
+    <!-- ============================================================ RULE DETAIL -->
+    <template x-if="!loading && tenant && route.view === 'rules' && route.param">
+      <div class="rh-view">
+        <a class="rh-link rh-back" href="#/rules"><i x-icon="'arrow-left'"></i>All rules</a>
+        <template x-if="!currentRule">
+          <section class="rh-panel"><div class="rh-empty"><strong>Rule not found</strong>Rule <span class="rh-mono" x-text="route.param"></span>
+            is not in this tenant's collected rules. <a href="#/data">Update from the tenant</a> if it was added recently.</div></section>
+        </template>
+        <template x-if="currentRule">
+          <div class="rh-view">
+            <!-- Header: identity, health, categories, notices -->
+            <section class="rh-panel">
+              <div class="rh-eyebrow" x-text="currentRule.source === 'defender' ? 'Defender XDR custom detection' : currentRule.source === 'sentinel' ? 'Microsoft Sentinel analytics rule' : 'Rule from markdown'"></div>
+              <h2 class="rh-h1 rh-detail-title" x-text="currentRule.displayName"></h2>
+              <div class="rh-meta">
+                <span class="rh-tag" x-text="sourceTag(currentRule.source)"></span>
+                <span class="rh-tag" x-text="kindLabel(currentRule.kind)"></span>
+                <span class="rh-tag" x-text="currentRule.status === 'autoDisabled' ? 'Auto-disabled by Defender' : (currentRule.enabled ? 'Enabled' : 'Disabled')"></span>
+                <span class="rh-tag" x-show="currentRule.severity" x-text="`Severity ${currentRule.severity}`"></span>
+                <span class="rh-chip tone-neutral rh-mono rh-id" x-text="currentRule.ruleId" title="Rule id"></span>
+                <a class="rh-link" x-show="currentRule.origin && currentRule.origin.startsWith('https://') && !currentRule.origin.startsWith('https://graph.microsoft.com/')"
+                   :href="currentRule.origin" target="_blank" rel="noopener noreferrer"><i x-icon="'external-link'"></i>Source</a>
+              </div>
+              <p class="rh-desc" x-show="currentRule.description" x-text="currentRule.description"></p>
+
+              <!-- Health + manual OK -->
+              <template x-if="docs.validation && currentRuleStatus && currentRule.enabled">
+                <div class="rh-line">
+                  <span class="rh-line-label">Health</span>
+                  <span class="rh-chip" :class="healthLook(currentRuleStatus.key).cls" :title="currentRuleStatus.title">
+                    <i x-icon="healthLook(currentRuleStatus.key).icon"></i><span x-text="currentRuleStatus.label"></span></span>
+
+                  <template x-if="['absent', 'table-empty', 'error', 'dead-exclusion'].includes(currentRuleStatus.key)">
+                    <span class="rh-line">
+                      <button type="button" class="rh-link" x-show="!okFormOpen" @click="okFormOpen = true; $nextTick(() => $refs.okNote?.focus())"
+                              title="Accept the current absent or empty values: the rule counts as OK until another value goes missing">Mark as OK…</button>
+                      <span class="rh-line" x-show="okFormOpen">
+                        <label class="rh-field rh-field--inline"><input type="text" x-ref="okNote" x-model="okNote" maxlength="300" aria-label="Why this rule is OK"
+                               placeholder="Why is this OK? (optional)" title="For example: the value only appears during an attack"
+                               @keydown.enter.prevent="markRuleOk(currentRule.ruleId)" @keydown.escape="okFormOpen = false"></label>
+                        <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="markRuleOk(currentRule.ruleId)"><i x-icon="'badge-check'"></i>Mark as OK</button>
+                        <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="okFormOpen = false">Cancel</button>
+                      </span>
+                    </span>
+                  </template>
+
+                  <template x-if="currentRuleStatus.key === 'manual-ok'">
+                    <span class="rh-line">
+                      <span class="rh-muted" x-show="currentRuleStatus.manual.note" x-text="`“${currentRuleStatus.manual.note}”`"></span>
+                      <span class="rh-small" x-show="currentRuleStatus.manual.decidedAt">Marked <span class="rh-mono" x-text="fmtDate(currentRuleStatus.manual.decidedAt)"></span></span>
+                      <span class="rh-chip tone-warn rh-chip--sm" x-show="!currentRuleStatus.manual.decidedAt">Not saved yet · Save to keep it</span>
+                      <button type="button" class="rh-link" @click="removeRuleOk(currentRule.ruleId)">Remove manual OK</button>
+                    </span>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Issue categories (reporting): toggles, saved right away -->
+              <div class="rh-line" role="group" aria-label="Issue categories">
+                <span class="rh-line-label">Issue category</span>
+                <template x-for="c in categoryNames" :key="c">
+                  <button type="button" class="rh-chip" :class="categoriesOf(currentRule.ruleId).includes(c) ? 'tone-info' : 'tone-neutral is-hollow'"
+                          :aria-pressed="categoriesOf(currentRule.ruleId).includes(c).toString()"
+                          :disabled="patching" @click="toggleCategory(currentRule.ruleId, c)"><i x-icon="categoriesOf(currentRule.ruleId).includes(c) ? 'check' : 'plus'"></i><span x-text="c"></span></button>
+                </template>
+                <button type="button" class="rh-link" x-show="!categoryFormOpen" :disabled="patching"
+                        @click="categoryFormOpen = true; $nextTick(() => $refs.newCategory?.focus())">New category…</button>
+                <span class="rh-line" x-show="categoryFormOpen">
+                  <label class="rh-field rh-field--inline rh-field--short"><input type="text" x-ref="newCategory" x-model="newCategory" maxlength="60" aria-label="New category name"
+                         placeholder="Category name"
+                         @keydown.enter.prevent="addCustomCategory(currentRule.ruleId)" @keydown.escape="categoryFormOpen = false"></label>
+                  <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="patching || !newCategory.trim()" @click="addCustomCategory(currentRule.ruleId)">Add</button>
+                  <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="categoryFormOpen = false">Cancel</button>
+                </span>
+              </div>
+
+              <div class="rh-stack-sm">
+                <div class="rh-banner is-crit" x-show="categoryError" x-cloak role="alert"><i x-icon="'octagon-x'"></i><div x-text="categoryError"></div></div>
+                <template x-if="currentRuleStatus?.okExpired">
+                  <div class="rh-banner is-warn"><i x-icon="'triangle-alert'"></i>
+                    <div><b>Marked OK manually earlier</b><span x-text="currentRuleStatus.okExpired.manual.note ? ` (“${currentRuleStatus.okExpired.manual.note}”)` : ''"></span>,
+                      but <b x-text="`${currentRuleStatus.okExpired.fresh} new value${currentRuleStatus.okExpired.fresh === 1 ? '' : 's'}`"></b>
+                      went absent, empty or failing since. Review them below, then mark the rule OK again or
+                      <button type="button" class="rh-link" @click="removeRuleOk(currentRule.ruleId)">remove the old OK</button>.</div>
+                  </div>
+                </template>
+                <div class="rh-banner is-warn" x-show="!currentRule.enabled"><i x-icon="'circle-off'"></i>
+                  <div><b>This rule is disabled.</b> It does not run. Its query and values are shown for reference;
+                    validation skips values that only disabled rules use.</div>
+                </div>
+                <template x-if="sameNameById[currentRule.ruleId]">
+                  <div class="rh-banner is-info"><i x-icon="'copy'"></i>
+                    <div>
+                      <span x-text="sameNameById[currentRule.ruleId].length === 1 ? 'Another rule has the same name:' : 'Other rules have the same name:'"></span>
+                      <template x-for="other in sameNameById[currentRule.ruleId]" :key="other.ruleId">
+                        <div class="rh-banner-line">
+                          <a :href="ruleHref(other.ruleId)" x-text="other.displayName"></a>
+                          <span x-text="` · ${sourceLabel(other.source)} · ${other.enabled ? 'enabled' : 'disabled'} · id `"></span><span class="rh-mono" x-text="other.ruleId"></span>
+                        </div>
+                      </template>
+                      <div class="rh-banner-line" x-text="!currentRule.enabled && sameNameById[currentRule.ruleId].some(o => o.enabled)
+                          ? 'This disabled rule is probably the old copy; the enabled one is what runs.'
+                          : currentRule.enabled && sameNameById[currentRule.ruleId].every(o => !o.enabled)
+                            ? 'The other copy is disabled: probably an older version of this rule.'
+                            : currentRule.enabled ? 'More than one copy is enabled: the same detection may run twice.' : ''"></div>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </section>
+
+            <template x-for="s in [statsById[currentRule.ruleId] ?? null]" :key="currentRule.ruleId">
+              <section class="rh-tiles" aria-label="Key figures for this rule">
+                <div class="rh-tile">
+                  <div class="rh-tile-icon tone-neutral"><i x-icon="'siren'"></i></div>
+                  <div class="rh-tile-value" x-text="s ? s.incidents : '—'"></div>
+                  <div class="rh-tile-label">Incidents</div>
+                  <div class="rh-tile-sub" x-text="s ? `${s.open} open · ${s.closed} closed` : 'No incident data'"></div>
+                </div>
+                <div class="rh-tile">
+                  <div class="rh-tile-icon tone-info"><i x-icon="'target'"></i></div>
+                  <div class="rh-tile-value" x-text="s ? `${s.tp} / ${s.bp} / ${s.fp}` : '—'"></div>
+                  <div class="rh-tile-label">TP / BP / FP</div>
+                  <div class="rh-tile-sub" x-text="s ? `${s.undetermined} undetermined` : ''"></div>
+                </div>
+                <div class="rh-tile">
+                  <div class="rh-tile-icon" :class="s && (s.tp + s.bp + s.fp) >= 5 && (s.bp + s.fp) / (s.tp + s.bp + s.fp) >= noiseThreshold ? 'tone-warn' : 'tone-neutral'"><i x-icon="'volume-2'"></i></div>
+                  <div class="rh-tile-value" x-text="s && (s.tp + s.bp + s.fp) ? fmtPct(s.bp + s.fp, s.tp + s.bp + s.fp) : '—'"></div>
+                  <div class="rh-tile-label">Noise (BP + FP)</div>
+                  <div class="rh-tile-sub" x-text="s && (s.tp + s.bp + s.fp) ? `${s.bp + s.fp} of ${s.tp + s.bp + s.fp} classified${(s.tp + s.bp + s.fp) < 5 ? ' · low n' : ''}` : 'No classified incidents'"></div>
+                </div>
+                <div class="rh-tile">
+                  <div class="rh-tile-icon tone-neutral"><i x-icon="'clock'"></i></div>
+                  <div class="rh-tile-value rh-tile-value--date" x-text="s ? fmtDate(s.lastIncidentAt) : '—'"></div>
+                  <div class="rh-tile-label">Last incident</div>
+                  <div class="rh-tile-sub" x-text="s && s.sharedIncidents ? `${s.sharedIncidents} shared with other rules` : ''"></div>
+                </div>
+                <div class="rh-tile">
+                  <div class="rh-tile-icon tone-info"><i x-icon="'scan-line'"></i></div>
+                  <div class="rh-tile-value" x-text="ruleHealth(currentRule.ruleId).checks"></div>
+                  <div class="rh-tile-label">Value checks</div>
+                  <div class="rh-tile-sub" x-text="(h => `${h.validate} validate · ${h.absent} absent · ${h.unreviewed} unreviewed`)(ruleHealth(currentRule.ruleId))"></div>
+                </div>
+              </section>
+            </template>
+
+            <!-- Investigation notes: track record per rule, saved right away -->
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Track record</div>
+                  <h2 class="rh-h2">Investigation notes</h2>
+                  <div class="rh-panel-sub" x-text="(n => n ? `${n} note${n === 1 ? '' : 's'}, newest first · saved right away` : 'What was looked at, found and decided · saved right away')((ruleNotes[currentRule.ruleId] ?? []).length)"></div>
+                </div>
+              </div>
+              <div class="note-form">
+                <label class="rh-field"><textarea rows="3" maxlength="4000" x-model="noteDrafts[currentRule.ruleId]" aria-label="New note"
+                          placeholder="What did you investigate, what did you find, what was decided?"
+                          @keydown.ctrl.enter.prevent="addRuleNote(currentRule.ruleId)"></textarea></label>
+                <div class="note-actions">
+                  <label class="rh-field rh-field--short"><i x-icon="'user'"></i><input type="text" x-model="noteAuthor" maxlength="100" placeholder="Your name (optional)" aria-label="Your name"></label>
+                  <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="addRuleNote(currentRule.ruleId)"
+                          :disabled="patching || !(noteDrafts[currentRule.ruleId] ?? '').trim()"><i x-icon="'plus'"></i><span x-text="patching ? 'Saving…' : 'Add note'"></span></button>
+                  <span class="rh-small"><span class="rh-kbd">Ctrl</span> + <span class="rh-kbd">Enter</span> adds the note</span>
+                </div>
+              </div>
+              <div class="rh-banner is-crit rh-mt" x-show="noteError" x-cloak role="alert"><i x-icon="'octagon-x'"></i><div x-text="noteError"></div></div>
+              <ol class="note-list" x-show="(ruleNotes[currentRule.ruleId] ?? []).length">
+                <template x-for="note in notesFor(currentRule.ruleId)" :key="note.id">
+                  <li class="note">
+                    <div class="note-meta">
+                      <i x-icon="'clock'"></i>
+                      <span class="rh-mono" x-text="fmtDateTime(note.createdAt)"></span>
+                      <span x-show="note.author" x-text="`· ${note.author}`"></span>
+                      <button type="button" class="rh-link rh-link--quiet" @click="deleteRuleNote(currentRule.ruleId, note.id)" :disabled="patching"><i x-icon="'trash-2'"></i>Delete</button>
+                    </div>
+                    <div class="note-text" x-text="note.text"></div>
+                  </li>
+                </template>
+              </ol>
+            </section>
+
+            <section class="rh-panel" x-show="docs.incidents">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Efficacy</div>
+                  <h2 class="rh-h2">Incidents per week</h2>
+                  <div class="rh-panel-sub">This rule's incidents by classification, per week (Monday, UTC)</div>
+                </div>
+                <div class="rh-tools"><button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="toggleTable('ruleWeekly')"><i x-icon="showTable.ruleWeekly ? 'chart-bar' : 'table-2'"></i><span x-text="showTable.ruleWeekly ? 'Chart' : 'Table'"></span></button></div>
+              </div>
+              <div class="rh-chart is-short" x-ref="ruleWeeklyChart" x-show="!showTable.ruleWeekly"></div>
+              <div class="rh-table-wrap" x-show="showTable.ruleWeekly">
+                <table class="rh-table">
+                  <thead><tr><th>Week of</th><th class="is-num">TP</th><th class="is-num">BP</th><th class="is-num">FP</th><th class="is-num">Undet.</th><th class="is-num">Open</th></tr></thead>
+                  <tbody>
+                    <template x-for="w in ruleWeeklyRows" :key="w.key">
+                      <tr><td class="rh-mono" x-text="w.key"></td><td class="is-num" x-text="w.tp"></td><td class="is-num" x-text="w.bp"></td><td class="is-num" x-text="w.fp"></td>
+                        <td class="is-num" x-text="w.undetermined"></td><td class="is-num" x-text="w.open"></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Detection logic</div>
+                  <h2 class="rh-h2">Query</h2>
+                  <div class="rh-panel-sub">Extracted comparisons are highlighted · right-click one (or focus it and press Enter) to validate or ignore its values</div>
+                </div>
+              </div>
+              <pre class="rh-code rh-query" x-html="highlightedQuery" @contextmenu="openMarkMenu($event)" @keydown="openMarkMenu($event)"></pre>
+
+              <!-- right-click menu on a highlighted comparison -->
+              <div class="ctx-menu" role="dialog" aria-label="Decide the values of this comparison" x-ref="markMenu"
+                   x-show="markMenu" x-cloak :style="markMenu && `left:${markMenu.left}px;top:${markMenu.top}px`"
+                   @click.outside="closeMarkMenu()" @keydown.escape.prevent.stop="closeMarkMenu(true)" @contextmenu.prevent>
+                <template x-if="markMenu">
+                  <div>
+                    <div class="ctx-head">
+                      <code class="ctx-expression" x-text="markMenu.expression"></code>
+                      <button type="button" class="rh-link rh-link--quiet" aria-label="Close" @click="closeMarkMenu(true)"><i x-icon="'x'"></i></button>
+                    </div>
+                    <template x-if="markMenu.unresolved">
+                      <p class="ctx-note"><b>Not extractable.</b> <span x-text="markMenu.unresolved"></span></p>
+                    </template>
+                    <template x-if="!markMenu.unresolved">
+                      <div>
+                        <div class="ctx-all" x-show="markMenuRows.filter(r => r.check.validatable).length > 1">
+                          <span class="rh-small" x-text="`All ${markMenuRows.filter(r => r.check.validatable).length} values`"></span>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setMarkMenuAll('validate')">Validate all</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setMarkMenuAll('ignore')">Ignore all</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setMarkMenuAll(null)">Clear</button>
+                        </div>
+                        <template x-for="row in markMenuRows" :key="row.id">
+                          <div class="ctx-row">
+                            <div class="ctx-value">
+                              <span class="rh-op" x-text="opLabel(row.check.operatorClass)"></span>
+                              <span class="check-value" x-text="row.check.value"></span>
+                              <span class="rh-small" x-show="markMenuTargets.length > 1" x-text="`in ${row.check.table}`"
+                                    title="This comparison runs on more than one table (union): each table is checked separately"></span>
+                              <span class="rh-chip tone-neutral rh-chip--sm" x-show="!row.check.validatable" title="Compared after the rule computed, expanded or wrapped the column. Not validatable in v1.">Derived</span>
+                              <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.exclusionOnly" title="Every rule uses this value only to exclude events">Exclusion only</span>
+                              <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.disabledOnly" title="Every rule that uses this value is disabled: it does not run, and validation skips the value">Disabled rules only</span>
+                              <span class="rh-chip rh-chip--sm" x-show="row.verdict" :class="verdictLook(row.verdict?.verdict).cls" :title="row.verdict?.error ?? ''">
+                                <i x-icon="row.verdict && verdictLook(row.verdict.verdict).icon"></i><span x-text="row.verdict ? verdictText(row.verdict) : ''"></span>
+                              </span>
+                            </div>
+                            <div class="rh-seg decision" role="group" :aria-label="`Decision for ${row.check.value}`" x-show="row.check.validatable">
+                              <button type="button" data-state="validate" :aria-pressed="(row.state === 'validate').toString()"
+                                      title="Must always be present in normal telemetry" @click.stop="setDecision(row.id, 'validate')">Validate</button>
+                              <button type="button" data-state="ignore" :aria-pressed="(row.state === 'ignore').toString()"
+                                      title="Only expected during an attack, or not useful" @click.stop="setDecision(row.id, 'ignore')">Ignore</button>
+                              <button type="button" :aria-pressed="(!row.state).toString()"
+                                      title="Unreviewed" aria-label="Unreviewed" @click.stop="setDecision(row.id, null)">—</button>
+                            </div>
+                          </div>
+                        </template>
+                        <p class="ctx-note rh-small">
+                          <span class="rh-mono" x-text="markMenuTargets.join(' · ')"></span> ·
+                          applies to every rule using the same value · <b>Save decisions</b> to keep it
+                        </p>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+              </div>
+              <div class="rh-legend rh-hl-legend">
+                <span><mark class="rh-hl is-absent">Absent</mark></span>
+                <span><mark class="rh-hl is-partial" title="Some values of this comparison occurred, others did not">Partly absent</mark></span>
+                <span><mark class="rh-hl is-unreviewed">Unreviewed</mark></span>
+                <span><mark class="rh-hl is-validate">Validate</mark></span>
+                <span><mark class="rh-hl is-present">Validated, present</mark></span>
+                <span><mark class="rh-hl is-ignore">Ignore</mark></span>
+                <span><mark class="rh-hl is-unresolved">Not extractable</mark></span>
+              </div>
+            </section>
+
+            <section class="rh-panel rh-panel--flush">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Values</div>
+                  <h2 class="rh-h2">Value checks</h2>
+                  <div class="rh-panel-sub">Decisions apply to every rule that uses the same value · keys <span class="rh-kbd">v</span> <span class="rh-kbd">i</span> <span class="rh-kbd">u</span> on a focused row</div>
+                </div>
+              </div>
+              <div class="rh-empty" x-show="!currentRuleChecks.length"><strong>No literal values extracted</strong>This rule compares no table column with a fixed value, so there is nothing to validate.</div>
+              <template x-for="row in currentRuleChecks.filter(r => r.check.validatable || showDerived)" :key="row.id">
+                <div class="check-row" tabindex="0" @keydown="onRowKey($event, row.id)">
+                  <div class="check-main">
+                    <span class="rh-mono rh-col" x-text="`${row.check.table}.${row.check.column}`"></span>
+                    <span class="rh-mono rh-col" x-show="row.check.path" x-text="row.check.path"></span>
+                    <span class="rh-op" x-text="opLabel(row.check.operatorClass)"></span>
+                    <span class="check-value" x-text="row.check.value"></span>
+                    <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.exclusionOnly" title="Every rule uses this value only to exclude events">Exclusion only</span>
+                    <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.disabledOnly" title="Every rule that uses this value is disabled: it does not run, and validation skips the value">Disabled rules only</span>
+                    <span class="rh-chip tone-neutral rh-chip--sm" x-show="!row.check.validatable"
+                          title="The rule compares a derived value (computed, expanded or wrapped column). Not validatable in v1.">Derived</span>
+                    <span class="rh-small" x-show="row.ruleIds.length > 1" x-text="`also used by ${row.ruleIds.length - 1} other rule${row.ruleIds.length > 2 ? 's' : ''}`"></span>
+                    <code class="rh-expr" x-text="row.ownExpressions.join('   ·   ')"></code>
+                  </div>
+                  <span class="rh-chip" x-show="row.verdict" :class="verdictLook(row.verdict?.verdict).cls" :title="row.verdict?.error ?? ''">
+                    <i x-icon="row.verdict && verdictLook(row.verdict.verdict).icon"></i><span x-text="row.verdict ? verdictText(row.verdict) : ''"></span>
+                  </span>
+                  <div class="rh-seg decision" role="group" :aria-label="`Decision for ${row.check.value}`"
+                       :title="row.check.validatable ? '' : 'Derived value: not validatable in v1'">
+                    <button type="button" data-state="validate" :aria-pressed="(row.state === 'validate').toString()" :disabled="!row.check.validatable"
+                            title="Must always be present in normal telemetry (v)" @click.stop="setDecision(row.id, 'validate')">Validate</button>
+                    <button type="button" data-state="ignore" :aria-pressed="(row.state === 'ignore').toString()" :disabled="!row.check.validatable"
+                            title="Only expected during an attack, or not useful (i)" @click.stop="setDecision(row.id, 'ignore')">Ignore</button>
+                    <button type="button" :aria-pressed="(!row.state).toString()" :disabled="!row.check.validatable"
+                            title="Unreviewed (u)" aria-label="Unreviewed" @click.stop="setDecision(row.id, null)">—</button>
+                  </div>
+                </div>
+              </template>
+              <div class="check-row check-row--note" x-show="currentRuleDerivedCount">
+                <span class="rh-small">
+                  <span x-text="`${currentRuleDerivedCount} derived value${currentRuleDerivedCount === 1 ? '' : 's'}: compared after the rule computed, expanded or wrapped the column; not validatable in v1.`"></span>
+                  <button type="button" class="rh-link" @click="showDerived = !showDerived" x-text="showDerived ? 'Hide' : 'Show'"></button>
+                </span>
+              </div>
+            </section>
+
+            <section class="rh-panel" x-show="(unresolvedByRule[currentRule.ruleId] ?? []).length">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Values</div>
+                  <h2 class="rh-h2">Not extractable</h2>
+                  <div class="rh-panel-sub">Comparisons without a fixed value or a table column: Detection Rule Health cannot check them</div>
+                </div>
+              </div>
+              <div class="rh-table-wrap">
+                <table class="rh-table">
+                  <thead><tr><th>Reason</th><th>Comparison</th><th>Detail</th></tr></thead>
+                  <tbody>
+                    <template x-for="(u, i) in unresolvedByRule[currentRule.ruleId] ?? []" :key="i">
+                      <tr><td><span class="rh-tag" x-text="{ RuntimeValue: 'Runtime value', UnboundExpression: 'Unbound column', ComputedColumn: 'Computed column' }[u.status] ?? u.status"
+                                    :title="unresolvedReason(u.status)"></span></td><td class="rh-mono is-primary" x-text="u.expression"></td><td x-text="u.detail ? u.detail[0].toUpperCase() + u.detail.slice(1) : ''"></td></tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="rh-panel" x-show="summaryByRule[currentRule.ruleId]?.bindErrors.length">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Schema</div>
+                  <h2 class="rh-h2">Bind errors</h2>
+                  <div class="rh-panel-sub">The query refers to something the schema does not know: it may fail, or rely on a column Microsoft does not document</div>
+                </div>
+              </div>
+              <ul class="rh-list">
+                <template x-for="(e, i) in summaryByRule[currentRule.ruleId]?.bindErrors ?? []" :key="i"><li><i x-icon="'code-xml'"></i><span x-text="e"></span></li></template>
+              </ul>
+            </section>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ============================================================ VALUE-CHECK WORKBENCH -->
+    <template x-if="!loading && tenant && route.view === 'checks'">
+      <div class="rh-view">
+        <template x-if="!docs.candidates">
+          <section class="rh-panel"><div class="rh-eyebrow">Value checks</div><div class="rh-empty"><strong>No value checks yet.</strong>Collect data to extract them from your rules.
+            <div class="rh-mt"><button type="button" class="rh-btn rh-btn--secondary" :disabled="isOffline || jobRunning" @click="collectNow()"><i x-icon="'refresh-cw'"></i>Collect now</button></div></div></section>
+        </template>
+        <template x-if="docs.candidates">
+          <div class="wb-layout">
+            <div class="rh-view">
+              <section class="rh-panel">
+                <div class="rh-panel-head">
+                  <div>
+                    <div class="rh-eyebrow">Selection</div>
+                    <h2 class="rh-h2">Which values must always be present?</h2>
+                    <div class="rh-panel-sub">Decide per value: <b>Validate</b> when normal telemetry always contains it, <b>Ignore</b> when it only appears during an attack. One decision covers every rule that uses the value.</div>
+                  </div>
+                </div>
+                <div class="rh-filters rh-filters--last" role="search">
+                  <label class="rh-search rh-filters-search"><i x-icon="'search'"></i>
+                    <input type="search" placeholder="Search value, column or table" x-model.debounce.150ms="checksFilter.text" aria-label="Search checks"></label>
+                  <label class="rh-select"><select x-model="checksFilter.table" @change="checksFilter.column = ''" aria-label="Table">
+                    <option value="">All tables</option>
+                    <template x-for="t in tableOptions" :key="t"><option :value="t" x-text="t"></option></template>
+                  </select></label>
+                  <label class="rh-select"><select x-model="checksFilter.column" aria-label="Column">
+                    <option value="">All columns</option>
+                    <template x-for="c in columnOptions" :key="c"><option :value="c" x-text="c"></option></template>
+                  </select></label>
+                  <label class="rh-select"><select x-model="checksFilter.exclusion" aria-label="Exclusion-only values"
+                          title="Exclusion-only values: every rule uses them only to exclude events (!=, !in, !has…)">
+                    <option value="">Include exclusion-only values</option>
+                    <option value="hide">Hide exclusion-only values</option>
+                    <option value="only">Only exclusion-only values</option>
+                  </select></label>
+                  <div class="rh-filters-checks">
+                    <label class="rh-check"><input type="checkbox" x-model="checksFilter.unreviewed" @change="touched = {}"> Unreviewed only</label>
+                    <label class="rh-check"><input type="checkbox" x-model="checksFilter.validatable"> Validatable only</label>
+                    <label class="rh-check" title="Only event-type columns (ActionType, OperationName, EventID, ...): values there are often expected in normal telemetry">
+                      <input type="checkbox" x-model="checksFilter.suggested" @change="toggleSuggested()"> Suggested columns only</label>
+                    <label class="rh-check" title="Hide values that only disabled rules use: those rules do not run and validation skips them">
+                      <input type="checkbox" x-model="checksFilter.enabledRules"> Enabled rules only</label>
+                    <label class="rh-check"><input type="checkbox" x-model="checksFilter.absent"> Verdict absent</label>
+                  </div>
+                </div>
+              </section>
+
+              <section class="rh-panel" x-show="!checkGroups.length">
+                <div class="rh-eyebrow">Selection</div>
+                <template x-if="checksFilter.unreviewed && !unreviewedCount">
+                  <div class="rh-empty"><strong>Every validatable value has a decision</strong>
+                    <span x-text="dirty ? 'Save decisions in the top bar, then run validation in ' : 'Run validation in '"></span><a href="#/data">Data</a>
+                    to check the selected values, or <button type="button" class="rh-link" @click="resetFilters()">show all values</button>.</div>
+                </template>
+                <template x-if="!(checksFilter.unreviewed && !unreviewedCount)">
+                  <div class="rh-empty"><strong>No values match the filters</strong>
+                    <button type="button" class="rh-link" @click="resetFilters()">Reset filters</button> to see all values.</div>
+                </template>
+              </section>
+
+              <template x-for="group in checkGroups" :key="group.table">
+                <section class="rh-panel rh-panel--flush">
+                  <div class="rh-panel-head">
+                    <div>
+                      <div class="rh-eyebrow">Table</div>
+                      <h2 class="rh-h2 rh-mono rh-table-name" x-text="group.table"></h2>
+                      <div class="rh-panel-sub" x-text="`${group.count} value${group.count === 1 ? '' : 's'} shown`"></div>
+                    </div>
+                  </div>
+                  <template x-for="col in group.columns" :key="col.key">
+                    <div class="col-group">
+                      <div class="col-head">
+                        <span class="rh-group-title" x-text="col.column"></span>
+                        <span class="rh-chip tone-info rh-chip--sm" x-show="isSuggested(col.column)" title="Event-type column: values here are often expected in normal telemetry"><i x-icon="'lightbulb'"></i>Suggested</span>
+                        <span class="rh-small" x-text="`${col.rows.length} value${col.rows.length === 1 ? '' : 's'}`"></span>
+                        <!-- Bulk actions only where there is more than one value; a single row has its own control. -->
+                        <div class="rh-tools" x-show="col.rows.length > 1">
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setColumn(col, 'validate')" :disabled="!col.rows.some(r => r.check.validatable)">Validate all</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setColumn(col, 'ignore')" :disabled="!col.rows.some(r => r.check.validatable)">Ignore all</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="setColumn(col, null)" :disabled="!col.rows.some(r => r.check.validatable)">Clear</button>
+                        </div>
+                      </div>
+                      <template x-for="row in col.rows" :key="row.id">
+                        <div class="check-row" tabindex="0" @keydown="onRowKey($event, row.id)">
+                          <div class="check-main">
+                            <span class="rh-op" x-text="opLabel(row.check.operatorClass)"></span>
+                            <span class="check-value" x-text="row.check.value"></span>
+                            <span class="rh-mono rh-col" x-show="row.check.path" x-text="row.check.path"></span>
+                            <button type="button" class="rh-link rh-link--quiet rh-used-by" @click.stop="expanded[row.id] = !expanded[row.id]"
+                                    :aria-expanded="(!!expanded[row.id]).toString()"><i x-icon="expanded[row.id] ? 'chevron-down' : 'chevron-right'"></i>
+                              <span x-text="`Used by ${row.ruleIds.length} rule${row.ruleIds.length === 1 ? '' : 's'}`"></span></button>
+                            <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.exclusionOnly" title="Every rule uses this value only to exclude events">Exclusion only</span>
+                            <span class="rh-chip tone-neutral rh-chip--sm" x-show="row.disabledOnly" title="Every rule that uses this value is disabled: it does not run, and validation skips the value">Disabled rules only</span>
+                            <span class="rh-chip tone-neutral rh-chip--sm" x-show="!row.check.validatable"
+                                  title="The rules compare a derived value (computed, expanded or wrapped column). Not validatable in v1.">Derived</span>
+                          </div>
+                          <span class="rh-chip" x-show="row.verdict" :class="verdictLook(row.verdict?.verdict).cls" :title="row.verdict?.error ?? ''">
+                            <i x-icon="row.verdict && verdictLook(row.verdict.verdict).icon"></i><span x-text="row.verdict ? verdictText(row.verdict) : ''"></span>
+                          </span>
+                          <div class="rh-seg decision" role="group" :aria-label="`Decision for ${row.check.value}`"
+                               :title="row.check.validatable ? '' : 'Derived value: not validatable in v1'">
+                            <button type="button" data-state="validate" :aria-pressed="(row.state === 'validate').toString()" :disabled="!row.check.validatable"
+                                    title="Must always be present in normal telemetry (v)" @click.stop="setDecision(row.id, 'validate')">Validate</button>
+                            <button type="button" data-state="ignore" :aria-pressed="(row.state === 'ignore').toString()" :disabled="!row.check.validatable"
+                                    title="Only expected during an attack, or not useful (i)" @click.stop="setDecision(row.id, 'ignore')">Ignore</button>
+                            <button type="button" :aria-pressed="(!row.state).toString()" :disabled="!row.check.validatable"
+                                    title="Unreviewed (u)" aria-label="Unreviewed" @click.stop="setDecision(row.id, null)">—</button>
+                          </div>
+                          <ul class="rule-list" x-show="expanded[row.id]">
+                            <template x-for="o in row.check.occurrences" :key="o.ruleId + o.expression + o.negated">
+                              <li>
+                                <a :href="ruleHref(o.ruleId)" x-text="ruleName(o.ruleId)"></a>
+                                <span class="rh-chip tone-neutral rh-chip--sm" x-show="o.negated">Excludes</span>
+                                <code class="rh-expr" x-text="o.expression"></code>
+                                <span class="rh-small" x-show="o.columnDefinition" x-text="`(${o.derivedColumn} = ${o.columnDefinition})`"></span>
+                              </li>
+                            </template>
+                          </ul>
+                        </div>
+                      </template>
+                    </div>
+                  </template>
+                </section>
+              </template>
+            </div>
+
+            <aside class="wb-side">
+              <section class="rh-panel rh-panel--side">
+                <div class="rh-eyebrow">Progress</div>
+                <div class="rh-progress-value"><span class="rh-num" x-text="reviewProgress.done"></span><span class="rh-small" x-text="` of ${reviewProgress.total} reviewed`"></span></div>
+                <div class="rh-progress" role="progressbar" :aria-valuenow="reviewProgress.done" aria-valuemin="0" :aria-valuemax="reviewProgress.total"
+                     aria-label="Validatable values reviewed"><span :style="`width:${reviewProgress.total ? Math.round(reviewProgress.done / reviewProgress.total * 100) : 0}%`"></span></div>
+                <p class="rh-small" x-show="reviewProgress.disabled"
+                   x-text="`${reviewProgress.disabled} more only used by disabled rules: not counted, not validated.`"></p>
+                <p class="rh-small" x-text="`${filteredChecks.length} shown with the current filters.`"></p>
+                <p class="rh-small" x-text="dirty ? `${changedCount} unsaved change${changedCount === 1 ? '' : 's'}: Save decisions in the top bar.` : 'All decisions saved.'"></p>
+              </section>
+              <section class="rh-panel rh-panel--side" x-show="exclusionOnlyChecks.unreviewed.length || exclusionOnlyChecks.decided.length">
+                <div class="rh-eyebrow">Exclusions</div>
+                <h3 class="rh-h2">Exclusion-only values</h3>
+                <p class="rh-small">
+                  Values the rules only use to exclude events (<span class="rh-mono">!=</span>, <span class="rh-mono">!in</span>, <span class="rh-mono">!has</span>…).
+                  When one is absent the rule still fires; the exclusion just does nothing.
+                </p>
+                <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="!exclusionOnlyChecks.unreviewed.length" @click="ignoreExclusionOnly()"
+                        x-text="exclusionOnlyChecks.unreviewed.length
+                          ? `Ignore ${exclusionOnlyChecks.unreviewed.length} unreviewed`
+                          : 'All exclusion-only values reviewed'"></button>
+                <p class="rh-small" x-show="exclusionOnlyChecks.decided.length"
+                   x-text="`${exclusionOnlyChecks.decided.length} already decided ${exclusionOnlyChecks.decided.length === 1 ? 'is' : 'are'} left as ${exclusionOnlyChecks.decided.length === 1 ? 'it is' : 'they are'} (validating an exclusion finds dead exclusions).`"></p>
+                <div class="rh-line">
+                  <button type="button" class="rh-link" @click="checksFilter.exclusion = 'only'; checksFilter.unreviewed = false; touched = {}">Show them</button>
+                  <span class="rh-small" aria-hidden="true">·</span>
+                  <button type="button" class="rh-link" @click="checksFilter.exclusion = 'hide'">Hide them</button>
+                </div>
+              </section>
+              <section class="rh-panel rh-panel--side">
+                <div class="rh-eyebrow">Keyboard</div>
+                <p class="rh-small">
+                  Focus a row, then <span class="rh-kbd">v</span> validate · <span class="rh-kbd">i</span> ignore ·
+                  <span class="rh-kbd">u</span> unreviewed · <span class="rh-kbd"><i x-icon="'arrow-down'"></i></span> <span class="rh-kbd"><i x-icon="'arrow-up'"></i></span> move.
+                </p>
+              </section>
+              <section class="rh-panel rh-panel--side" x-show="orphanedDecisions.length">
+                <div class="rh-eyebrow">Housekeeping</div>
+                <h3 class="rh-h2" x-text="`Orphaned decisions (${orphanedDecisions.length})`"></h3>
+                <p class="rh-small">These values are no longer extracted from any rule. They are kept until you delete them.</p>
+                <ul class="rh-list">
+                  <template x-for="o in orphanedDecisions" :key="o.id">
+                    <li>
+                      <span class="rh-mono" x-text="o.check ? `${o.check.table}.${o.check.column} ${opLabel(o.check.operatorClass)} ${o.check.value}` : o.id"></span>
+                      <span class="rh-small" x-text="o.state"></span>
+                      <button type="button" class="rh-link rh-link--quiet" @click="deleteOrphan(o.id)"><i x-icon="'trash-2'"></i>Delete</button>
+                    </li>
+                  </template>
+                </ul>
+              </section>
+            </aside>
+          </div>
+        </template>
+      </div>
+    </template>
+
+    <!-- ============================================================ VALIDATION -->
+    <template x-if="!loading && tenant && route.view === 'validation'">
+      <div class="rh-view">
+        <template x-if="!docs.validation">
+          <section class="rh-panel">
+            <div class="rh-eyebrow">Validation</div>
+            <template x-if="!validateCount">
+              <div class="rh-empty"><strong>No values selected for validation.</strong>Mark values as <b>Validate</b> in Value checks first.
+                <div class="rh-mt"><a class="rh-link" href="#/checks"><i x-icon="'scan-line'"></i>Open Value checks</a></div></div>
+            </template>
+            <template x-if="validateCount">
+              <div class="rh-empty"><strong>No validation results yet.</strong><span x-text="`${fmtInt(validateCount)} values are marked Validate.`"></span>
+                Run the validation in <a href="#/data">Data</a>.</div>
+            </template>
+          </section>
+        </template>
+        <template x-if="docs.validation">
+          <section class="rh-panel">
+            <div class="rh-panel-head">
+              <div>
+                <div class="rh-eyebrow">Last validation</div>
+                <h2 class="rh-h2" x-text="`${fmtInt(docs.validation.results.length)} values checked over ${docs.validation.windowDays} days`"></h2>
+                <div class="rh-panel-sub">Run <span class="rh-mono" x-text="fmtDateTime(docs.validation.runAt)"></span> · each selected value counted in the tenant's data</div>
+              </div>
+              <div class="rh-tools"><a class="rh-btn rh-btn--ghost rh-btn--sm" href="#/data">Open Data<i x-icon="'arrow-right'"></i></a></div>
+            </div>
+            <div class="rh-chips">
+              <template x-for="c in validationCounts" :key="c.verdict">
+                <span class="rh-chip" :class="verdictLook(c.verdict).cls"><i x-icon="verdictLook(c.verdict).icon"></i><span x-text="`${c.count} ${verdictInfo(c.verdict).label.toLowerCase()}`"></span></span>
+              </template>
+            </div>
+            <div class="rh-banner is-warn rh-mt" x-show="validationStale" x-cloak><i x-icon="'triangle-alert'"></i>
+              <div>The rules were extracted again after this validation ran, so some results may be out of date. <a href="#/data">Validate again</a> in Data.</div>
+            </div>
+          </section>
+        </template>
+
+        <template x-for="group in validationGroups" :key="group.verdict">
+          <section class="rh-panel">
+            <div class="rh-panel-head">
+              <div>
+                <div class="rh-eyebrow" x-text="{ absent: 'Needs attention', 'table-empty': 'Connector or retention', error: 'Query failed', skipped: 'Not checked', present: 'Healthy' }[group.verdict] ?? 'Results'"></div>
+                <h2 class="rh-h2 rh-verdict-title"><span class="rh-chip" :class="verdictLook(group.verdict).cls"><i x-icon="verdictLook(group.verdict).icon"></i><span x-text="verdictInfo(group.verdict).label"></span></span>
+                  <span x-text="`${group.rows.length} value${group.rows.length === 1 ? '' : 's'}`"></span></h2>
+                <div class="rh-panel-sub" x-text="{
+                    absent: 'The value did not occur in the window: rules that need it can no longer fire on it.',
+                    'table-empty': 'No rows in the table during the window: a connector or retention issue.',
+                    error: 'The validation query failed; the message is under the value.',
+                    skipped: 'Not queried in this run.',
+                    present: 'The value occurred in the window.' }[group.verdict] ?? ''"></div>
+              </div>
+            </div>
+            <div class="rh-table-wrap">
+              <table class="rh-table">
+                <thead><tr><th>Table.Column</th><th>Value</th><th class="is-num">Matches</th><th class="is-num">Table rows</th><th>Last seen</th><th>Rules</th></tr></thead>
+                <tbody>
+                  <template x-for="r in group.rows" :key="r.checkId">
+                    <tr>
+                      <td class="rh-mono" x-text="`${r.table}.${r.path ?? r.column}`"></td>
+                      <td>
+                        <div class="rh-line"><span class="rh-opval"><span class="rh-op" x-text="opLabel(r.operatorClass)"></span> <span class="check-value" x-text="r.value"></span></span>
+                          <span class="rh-chip tone-warn is-hollow rh-chip--sm" x-show="group.verdict === 'absent' && r.deadExclusion" title="Only used to exclude events: the rule still fires, the exclusion does nothing"><i x-icon="'circle-dashed'"></i>Dead exclusion</span></div>
+                        <div class="rh-small rh-mt-xs" x-show="r.error" x-text="r.error"></div>
+                      </td>
+                      <td class="is-num" x-text="fmtInt(r.matchCount)"></td>
+                      <td class="is-num" x-text="fmtInt(r.tableRowCount)"></td>
+                      <td class="rh-mono" x-text="fmtDate(r.lastSeenAt)"></td>
+                      <td class="rh-rule-links">
+                        <span class="rh-small" x-show="!r.check">No longer extracted</span>
+                        <template x-for="id in r.ruleIds" :key="id">
+                          <div><a :href="ruleHref(id)" x-text="ruleName(id)"></a></div>
+                        </template>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </template>
+      </div>
+    </template>
+
+    <!-- ============================================================ SETUP WIZARD (#/setup/<step>) -->
+    <!-- 1. welcome -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'welcome'">
+      <div class="rh-view setup">
+        <section class="rh-panel rh-form">
+          <div>
+            <div class="rh-eyebrow">Step 1 of 6 · Welcome</div>
+            <h2 class="rh-h2">Detection Rule Health</h2>
+            <div class="rh-panel-sub">One overview of the Microsoft Sentinel analytics rules and Defender XDR custom detections in your tenant.</div>
+          </div>
+          <ul class="setup-points">
+            <li><i x-icon="'chart-column'"></i><span><b>Efficacy per rule</b>: the incidents each rule created and how they were classified.</span></li>
+            <li><i x-icon="'scan-line'"></i><span><b>Value checks</b>: the values your rules compare against, and whether they still occur in your data.</span></li>
+            <li><i x-icon="'house'"></i><span><b>Runs on your machine</b>, with your own sign-in.</span></li>
+          </ul>
+          <div class="rh-banner is-info"><i x-icon="'shield-check'"></i>
+            <div>Everything stays on this machine, in the data folder (the data volume when you run the container). Detection Rule Health has no backend; nothing is sent
+              outside of the container. Sign-in tokens are kept in memory only.
+              <a :href="docsUrl('privacy/')" target="_blank" rel="noopener">Privacy statement</a></div></div>
+          <div class="rh-line">
+            <a class="rh-btn rh-btn--primary" href="#/setup/app">Continue<i x-icon="'arrow-right'"></i></a>
+            <button type="button" class="rh-btn rh-btn--secondary" x-show="demoTenant" @click="exploreDemo()"><i x-icon="'flask-conical'"></i>Explore with demo data</button>
+          </div>
+          <p class="rh-small" x-show="demoTenant">The demo data holds sample rules from a public rule repository with synthetic incident numbers. It is read-only and clearly marked.</p>
+        </section>
+      </div>
+    </template>
+
+    <!-- 2. how to sign in (own app registration, or Microsoft's apps as quick start) -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'app'">
+      <div class="rh-grid-2 setup">
+        <form class="rh-panel rh-form" @submit.prevent="submitApp()" novalidate>
+          <div>
+            <div class="rh-eyebrow">Step 2 of 6 · How to sign in</div>
+            <h2 class="rh-h2">How to sign in</h2>
+            <div class="rh-panel-sub">Both options sign in through your browser and keep tokens in memory only, and Detection Rule Health only reads. They differ in whose app the consent goes to.</div>
+          </div>
+          <fieldset class="rh-options">
+            <legend class="rh-sr-only">Sign-in option</legend>
+            <label class="rh-option">
+              <input type="radio" name="signIn" value="own-app" x-model="setup.form.signIn">
+              <span><b>Your own app registration</b> <span class="rh-chip tone-info rh-chip--sm">Recommended</span>
+                <span class="rh-option-text">An app registration you create in your tenant (with the script from the setup guide, about a minute). Consent covers only this tool; you control who may use it and can delete it when done.</span></span>
+            </label>
+            <label class="rh-option">
+              <input type="radio" name="signIn" value="microsoft-apps" x-model="setup.form.signIn">
+              <span><b>Microsoft's apps</b> <span class="rh-chip tone-neutral rh-chip--sm">Quick start</span>
+                <span class="rh-option-text">No app registration: signs in as Microsoft Graph Command Line Tools and Microsoft Azure PowerShell, the apps behind <span class="rh-mono">Connect-MgGraph</span> and <span class="rh-mono">Connect-AzAccount</span>. Consent given to Graph Command Line Tools also applies to everyone's <span class="rh-mono">Connect-MgGraph</span> in your tenant.</span></span>
+            </label>
+          </fieldset>
+          <label class="rh-form-field">
+            <span class="rh-form-label">Tenant ID <span class="rh-small">· Microsoft Entra admin center → Overview, or a domain such as contoso.onmicrosoft.com</span></span>
+            <span class="rh-field" :class="{ 'is-invalid': !!setupErrors.tenant }"><input type="text" class="rh-mono" x-model="setup.form.tenant" @change="lookupTenant()"
+                   placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false" :aria-invalid="!!setupErrors.tenant"></span>
+            <span class="rh-small" x-show="setup.lookup.busy">Looking up the tenant ID…</span>
+            <span class="rh-form-ok" x-show="!setup.lookup.busy && setup.lookup.tenantId && setup.lookup.input === setup.form.tenant.trim()"><i x-icon="'check'"></i>
+              <span>Tenant ID <span class="rh-mono" x-text="setup.lookup.tenantId"></span></span></span>
+            <span class="rh-form-error" x-show="setupErrors.tenant" x-text="setupErrors.tenant"></span>
+          </label>
+          <label class="rh-form-field" x-show="setup.form.signIn === 'own-app'">
+            <span class="rh-form-label">Application (client) ID <span class="rh-small">· App registrations → Detection Rule Health → Overview</span></span>
+            <span class="rh-field" :class="{ 'is-invalid': !!setupErrors.clientId }"><input type="text" class="rh-mono" x-model="setup.form.clientId"
+                   placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false" :aria-invalid="!!setupErrors.clientId"></span>
+            <span class="rh-form-error" x-show="setupErrors.clientId" x-text="setupErrors.clientId"></span>
+          </label>
+          <label class="rh-form-field">
+            <span class="rh-form-label">Display name</span>
+            <span class="rh-field"><input type="text" x-model="setup.form.displayName" @input="syncSetupAlias()" placeholder="Contoso production" autocomplete="off"></span>
+          </label>
+          <label class="rh-form-field">
+            <span class="rh-form-label">Alias <span class="rh-small">· the data folder: lowercase letters, digits and dashes</span></span>
+            <span class="rh-field" :class="{ 'is-invalid': !!setupErrors.alias }"><input type="text" class="rh-mono" x-model="setup.form.alias" @input="setup.form.aliasTouched = true"
+                   placeholder="contoso" autocomplete="off" spellcheck="false" :aria-invalid="!!setupErrors.alias" :readonly="!!setup.alias" :title="setup.alias ? 'The alias of a saved tenant cannot change' : null"></span>
+            <span class="rh-form-error" x-show="setupErrors.alias" x-text="setupErrors.alias"></span>
+          </label>
+          <div class="rh-banner is-crit" x-show="setup.error" role="alert"><i x-icon="'octagon-x'"></i><div class="rh-pre" x-text="setup.error"></div></div>
+          <div class="rh-line">
+            <a class="rh-btn rh-btn--ghost" href="#/setup/welcome"><i x-icon="'arrow-left'"></i>Back</a>
+            <button type="submit" class="rh-btn rh-btn--primary" :disabled="setup.saving || setup.lookup.busy"><span x-text="setup.saving ? 'Saving…' : 'Continue'"></span><i x-icon="'arrow-right'"></i></button>
+          </div>
+        </form>
+
+        <template x-if="setup.form.signIn === 'own-app'">
+          <section class="rh-panel rh-form">
+            <div>
+              <div class="rh-eyebrow">Redirect URI</div>
+              <h2 class="rh-h2">Register this redirect URI</h2>
+              <div class="rh-panel-sub">In the app registration: Authentication → Add a platform → <b>Mobile and desktop applications</b>.</div>
+            </div>
+            <div class="rh-line">
+              <span class="rh-field setup-copy"><input type="text" class="rh-mono" :value="redirectUri" readonly aria-label="Redirect URI" @focus="$event.target.select()"></span>
+              <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="copyText(redirectUri, 'redirect')"><i x-icon="setup.copied === 'redirect' ? 'check' : 'copy'"></i><span x-text="setup.copied === 'redirect' ? 'Copied' : 'Copy'"></span></button>
+            </div>
+            <p class="rh-small">Not under <i>Web</i> (that platform wants a client secret) and not under <i>Single-page application</i>.
+              Leave "Allow public client flows" off.</p>
+            <p class="rh-small"><b>Why recommended:</b> the consent covers only this tool, you decide who may use it (assignment required), and you delete it when you are done.</p>
+            <a class="rh-link" :href="docsUrl('setup/#create-the-app-registration')" target="_blank" rel="noopener"><i x-icon="'external-link'"></i>How to create the app registration</a>
+          </section>
+        </template>
+        <template x-if="setup.form.signIn === 'microsoft-apps'">
+          <section class="rh-panel rh-form">
+            <div>
+              <div class="rh-eyebrow">Quick start</div>
+              <h2 class="rh-h2">What the quick start means</h2>
+              <div class="rh-panel-sub">Good for a first look in your own or a lab tenant. For regular or shared use, create your own app registration.</div>
+            </div>
+            <ul class="setup-points">
+              <li><i x-icon="'log-in'"></i><span><b>Two sign-ins in a row</b>: Microsoft Graph Command Line Tools for Defender XDR, then Microsoft Azure PowerShell for Microsoft Sentinel and Log Analytics. The second one is usually only a click.</span></li>
+              <li><i x-icon="'key-round'"></i><span><b>Consent goes to Microsoft's app.</b> An administrator consents to the security permissions for Graph Command Line Tools; that consent also applies to everyone's <span class="rh-mono">Connect-MgGraph</span> in your tenant.</span></li>
+              <li><i x-icon="'shield-question'"></i><span><b>Depends on Microsoft.</b> It works within what Microsoft allows these apps to do, and only if your Conditional Access policies allow them. Your sign-in logs show both apps signing in from a browser.</span></li>
+              <li><i x-icon="'clock'"></i><span><b>The consent stays</b> until an administrator removes it; Microsoft's app itself cannot be deleted. A token for Graph Command Line Tools can also carry permissions consented to it earlier for other work; Detection Rule Health only sends the read requests listed in the next step.</span></li>
+              <li><i x-icon="'memory-stick'"></i><span><b>Same handling of tokens</b>: in memory only, never on disk; no Azure CLI or PowerShell modules are used.</span></li>
+            </ul>
+            <a class="rh-link" :href="docsUrl('setup/#choose-how-to-sign-in')" target="_blank" rel="noopener"><i x-icon="'external-link'"></i>Compare the two options</a>
+          </section>
+        </template>
+      </div>
+    </template>
+
+    <!-- 3. sign in -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'signin'">
+      <div class="rh-grid-2 setup">
+        <section class="rh-panel rh-form">
+          <div>
+            <div class="rh-eyebrow" x-text="isQuickStart ? 'Step 3 of 6 · Sign in · Quick start' : 'Step 3 of 6 · Sign in'"></div>
+            <h2 class="rh-h2" x-text="`Sign in to ${setupTenant?.displayName ?? setup.alias}`"></h2>
+            <div class="rh-panel-sub" x-show="!isQuickStart">Your browser goes to the Microsoft sign-in page of your tenant. MFA and Conditional Access apply as usual.</div>
+            <div class="rh-panel-sub" x-show="isQuickStart">Two sign-ins in a row on the Microsoft sign-in page: Microsoft Graph Command Line Tools, then Microsoft Azure PowerShell.
+              Pick the same account both times. MFA and Conditional Access apply as usual.</div>
+          </div>
+          <template x-if="setupNotice && !setupNotice.ok">
+            <div class="rh-banner is-crit" role="alert"><i x-icon="'octagon-x'"></i>
+              <div><b>Sign-in failed</b>
+                <div class="rh-pre" x-text="setupNotice.hint ?? setupNotice.message"></div>
+                <div class="rh-small rh-mono rh-mt-xs" x-show="setupNotice.hint" x-text="setupNotice.message"></div>
+                <div class="rh-small rh-mt-xs" x-show="setupNotice.code || setupNotice.correlationId">
+                  <span class="rh-mono" x-text="setupNotice.code"></span><span x-show="setupNotice.correlationId"> · correlation ID <span class="rh-mono" x-text="setupNotice.correlationId"></span></span></div>
+                <a :href="docsUrl('troubleshooting/#sign-in-errors')" target="_blank" rel="noopener">What this error means</a></div></div>
+          </template>
+          <template x-if="setupNotice && setupNotice.ok && !signedInAs(setup.alias)">
+            <div class="rh-banner is-info" role="status"><i x-icon="'check'"></i><div x-text="setupNotice.message"></div></div>
+          </template>
+          <template x-if="signedInAs(setup.alias)">
+            <div class="rh-banner is-info" role="status"><i x-icon="'log-in'"></i>
+              <div>Signed in<span x-show="signedInAs(setup.alias)?.upn"> as <span class="rh-mono" x-text="signedInAs(setup.alias)?.upn"></span></span>.</div></div>
+          </template>
+          <div class="rh-line">
+            <a class="rh-btn rh-btn--ghost" href="#/setup/app"><i x-icon="'arrow-left'"></i>Back</a>
+            <template x-if="!signedInAs(setup.alias)">
+              <button type="button" class="rh-btn rh-btn--primary" @click="signIn(setup.alias, 'setup')"><i x-icon="'log-in'"></i>Sign in with Microsoft</button>
+            </template>
+            <template x-if="signedInAs(setup.alias)">
+              <a class="rh-btn rh-btn--primary" href="#/setup/workspaces">Continue<i x-icon="'arrow-right'"></i></a>
+            </template>
+            <button type="button" class="rh-link" x-show="signedInAs(setup.alias)" @click="signIn(setup.alias, 'setup')">Use another account</button>
+          </div>
+          <template x-if="!isQuickStart">
+            <div class="rh-fix">
+              <p><b>Admin consent</b> · an administrator approves the permissions once for the whole tenant (Global, Cloud Application or
+                Application Administrator). Signing in as that administrator shows the prompt; for someone else, send the link.</p>
+              <div class="rh-line rh-mt-xs">
+                <button type="button" class="rh-link" :disabled="!adminConsentUrl()" @click="location.href = adminConsentUrl()"><i x-icon="'key-round'"></i>Grant admin consent…</button>
+                <button type="button" class="rh-link" :disabled="!adminConsentUrl()" @click="copyText(adminConsentUrl(), 'consent')"><i x-icon="setup.copied === 'consent' ? 'check' : 'copy'"></i><span x-text="setup.copied === 'consent' ? 'Copied' : 'Copy link for an admin'"></span></button>
+              </div>
+            </div>
+          </template>
+          <template x-if="isQuickStart">
+            <div class="rh-fix">
+              <p><b>Admin consent</b> · the security permissions need an administrator's consent for Microsoft Graph Command Line Tools
+                (Global, Privileged Role, Cloud Application or Application Administrator). With <b>Sign in and consent</b>, Microsoft shows the prompt.
+                Tick "Consent on behalf of your organization" only if everyone's Graph PowerShell in this tenant may have these read permissions;
+                otherwise use your own app registration.</p>
+              <p class="rh-mt-xs">Not an administrator? Ask one to open Detection Rule Health on their computer and choose <b>Sign in and consent</b> once,
+                or use your own app registration.</p>
+              <div class="rh-line rh-mt-xs">
+                <button type="button" class="rh-link" @click="signIn(setup.alias, 'setup', true)"><i x-icon="'key-round'"></i>Sign in and consent…</button>
+                <a class="rh-link" href="#/setup/app" @click.prevent="reconnectTenant(); setup.form.signIn = 'own-app'"><i x-icon="'arrow-left'"></i>Use your own app registration</a>
+              </div>
+            </div>
+          </template>
+        </section>
+
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">What the sign-in is used for</div>
+              <h2 class="rh-h2">Permissions</h2>
+              <div class="rh-panel-sub">Delegated: Detection Rule Health only reads, and never more than your own account may.</div>
+            </div>
+          </div>
+          <div class="rh-table-wrap">
+            <table class="rh-table">
+              <thead><tr><th>Permission</th><th>Used to</th></tr></thead>
+              <tbody>
+                <template x-for="p in permissions" :key="p.api + p.name">
+                  <tr><td><span class="rh-mono" x-text="p.name"></span>
+                      <div class="rh-small" x-text="isQuickStart ? `${p.api} · via ${quickStartApp(p.api)}` : p.api"></div></td><td x-text="p.why"></td></tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+          <p class="rh-small rh-mt">Your account also needs a role: <b>Security Reader</b> (or a Defender XDR role with read access to security data) and
+            <b>Microsoft Sentinel Reader</b> on each workspace. With only one of them, the app collects what it can and says what it could not read.</p>
+        </section>
+      </div>
+    </template>
+
+    <!-- 4. workspaces -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'workspaces'">
+      <div class="rh-view setup">
+        <section class="rh-panel rh-form">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Step 4 of 6 · Workspaces</div>
+              <h2 class="rh-h2">Microsoft Sentinel workspaces</h2>
+              <div class="rh-panel-sub">The Log Analytics workspaces in the subscriptions you can see. Select the ones whose analytics rules to include.</div>
+            </div>
+            <div class="rh-tools"><button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="setup.discover.busy" @click="discoverWorkspaces()"><i x-icon="'refresh-cw'"></i>Refresh list</button></div>
+          </div>
+
+          <div class="rh-empty" x-show="setup.discover.busy"><strong>Reading subscriptions and workspaces</strong>This takes a few seconds per subscription.</div>
+          <template x-if="setup.discover.error && setup.discover.status === 401">
+            <div class="rh-banner is-warn" role="alert"><i x-icon="'log-out'"></i>
+              <div><span x-text="setup.discover.error"></span> <a href="#/setup/signin">Sign in again</a></div></div>
+          </template>
+
+          <template x-if="setup.discover.result">
+            <div class="rh-form">
+              <p class="rh-small" x-text="`${setup.discover.result.subscriptions} subscription${setup.discover.result.subscriptions === 1 ? '' : 's'} · ${setup.discover.result.workspaces.length} workspace${setup.discover.result.workspaces.length === 1 ? '' : 's'}`"></p>
+              <template x-if="discoveredSentinel.length">
+                <div class="rh-table-wrap">
+                  <table class="rh-table">
+                    <thead><tr><th><span class="rh-sr-only">Include</span></th><th>Workspace</th><th>Resource group</th><th>Subscription</th><th>Region</th><th>Sentinel</th></tr></thead>
+                    <tbody>
+                      <template x-for="w in discoveredSentinel" :key="w.workspaceId">
+                        <tr :class="{ 'is-selected': setup.discover.selected[w.workspaceId] }">
+                          <td><label class="rh-check"><input type="checkbox" x-model="setup.discover.selected[w.workspaceId]" :disabled="setup.discover.none" @change="setup.discover.none = false" :aria-label="`Include ${w.workspaceName}`"></label></td>
+                          <td class="is-primary rh-mono" x-text="w.workspaceName"></td>
+                          <td class="rh-mono" x-text="w.resourceGroup"></td>
+                          <td><span x-text="w.subscriptionName"></span>
+                            <span class="rh-chip tone-neutral rh-chip--sm" x-show="w.subscriptionState !== 'Enabled'" x-text="`Subscription ${w.subscriptionState.toLowerCase()}`" title="Reads still work in this subscription state"></span></td>
+                          <td x-text="w.location ?? '—'"></td>
+                          <td><span class="rh-chip rh-chip--sm" :class="sentinelLook(w.sentinel).cls"><i x-icon="sentinelLook(w.sentinel).icon"></i><span x-text="sentinelLook(w.sentinel).text"></span></span></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </template>
+              <div class="rh-empty" x-show="!discoveredSentinel.length"><strong>No workspace with Microsoft Sentinel found</strong>
+                Choose <b>No Sentinel workspace</b> for Defender XDR only, or paste a workspace below if you have a role on it but not on its subscription.</div>
+              <template x-if="discoveredOther.length">
+                <details class="plan-batch">
+                  <summary><i x-icon="'chevron-right'"></i><span x-text="`Workspaces without Microsoft Sentinel (${discoveredOther.length})`"></span></summary>
+                  <ul class="plan-items">
+                    <template x-for="w in discoveredOther" :key="w.workspaceId">
+                      <li><label class="rh-check"><input type="checkbox" x-model="setup.discover.selected[w.workspaceId]" :disabled="setup.discover.none" @change="setup.discover.none = false">
+                        <span class="rh-mono" x-text="w.workspaceName"></span> <span class="rh-small" x-text="`· ${w.resourceGroup} · ${w.subscriptionName}`"></span></label></li>
+                    </template>
+                  </ul>
+                </details>
+              </template>
+              <template x-if="setup.discover.result.warnings.length">
+                <details class="plan-batch">
+                  <summary><i x-icon="'chevron-right'"></i><span x-text="`Not everything could be read (${setup.discover.result.warnings.length})`"></span></summary>
+                  <ul class="plan-items"><template x-for="w in setup.discover.result.warnings" :key="w"><li class="rh-small" x-text="w"></li></template></ul>
+                </details>
+              </template>
+            </div>
+          </template>
+
+          <template x-if="setup.discover.loaded">
+            <div class="rh-form">
+              <label class="rh-form-field">
+                <span class="rh-form-label">Workspace not listed? <span class="rh-small">· paste its resource ID or portal URL</span></span>
+                <span class="rh-line">
+                  <span class="rh-field setup-copy"><input type="text" class="rh-mono" x-model="setup.discover.manual" @keydown.enter.prevent="addManualWorkspace()"
+                         placeholder="/subscriptions/…/resourceGroups/…/providers/Microsoft.OperationalInsights/workspaces/…" autocomplete="off" spellcheck="false"></span>
+                  <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="!parsedWorkspace(setup.discover.manual)" @click="addManualWorkspace()"><i x-icon="'plus'"></i>Add</button>
+                </span>
+              </label>
+              <template x-for="id in setup.discover.manualIds" :key="id">
+                <div class="rh-line"><span class="rh-form-ok"><i x-icon="'check'"></i><span class="rh-mono" x-text="manualLabel(id)"></span></span>
+                  <button type="button" class="rh-link rh-link--quiet" @click="setup.discover.manualIds = setup.discover.manualIds.filter(x => x !== id)"><i x-icon="'trash-2'"></i>Remove</button></div>
+              </template>
+              <label class="rh-check"><input type="checkbox" x-model="setup.discover.none" @change="toggleNoWorkspace()"> No Sentinel workspace (Defender XDR custom detections only)</label>
+            </div>
+          </template>
+
+          <div class="rh-banner is-crit" x-show="setup.discover.error && setup.discover.status !== 401" role="alert"><i x-icon="'octagon-x'"></i><div class="rh-pre" x-text="setup.discover.error"></div></div>
+          <div class="rh-line">
+            <a class="rh-btn rh-btn--ghost" href="#/setup/signin"><i x-icon="'arrow-left'"></i>Back</a>
+            <button type="button" class="rh-btn rh-btn--primary" :disabled="setup.saving || setup.discover.busy || !setup.discover.loaded" @click="saveWorkspaces()">
+              <span x-text="setup.saving ? 'Saving…' : setup.discover.none ? 'Continue without a workspace' : `Continue with ${selectedWorkspaceIds.length} workspace${selectedWorkspaceIds.length === 1 ? '' : 's'}`"></span><i x-icon="'arrow-right'"></i></button>
+          </div>
+        </section>
+      </div>
+    </template>
+
+    <!-- 5. collect -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'collect'">
+      <div class="rh-grid-2 setup">
+        <section class="rh-panel rh-form">
+          <div>
+            <div class="rh-eyebrow">Step 5 of 6 · Collect</div>
+            <h2 class="rh-h2">First collection</h2>
+            <div class="rh-panel-sub">Reads the rules, the table schema and the incidents, then extracts the value checks. Usually a few minutes.</div>
+          </div>
+          <label class="rh-form-field">
+            <span class="rh-form-label">Incident window</span>
+            <span class="rh-select rh-field--short"><select x-model.number="setup.collect.incidentDays" :disabled="jobRunning">
+              <option value="30">30 days</option><option value="90">90 days</option><option value="180">180 days</option></select></span>
+          </label>
+          <label class="rh-form-field">
+            <span class="rh-form-label">Validation window <span class="rh-small">· up to 30 days: advanced hunting keeps 30 days of Defender XDR data</span></span>
+            <span class="rh-field rh-field--num"><input type="number" min="1" max="30" x-model.number="setup.collect.validationDays" :disabled="jobRunning" aria-label="Validation window in days"> days</span>
+          </label>
+          <label class="rh-check"><input type="checkbox" x-model="setup.collect.extract" :disabled="jobRunning"> Extract value checks after collecting</label>
+          <div class="rh-banner is-crit" x-show="jobError" role="alert"><i x-icon="'octagon-x'"></i><div x-text="jobError"></div></div>
+          <div class="rh-line">
+            <a class="rh-btn rh-btn--ghost" href="#/setup/workspaces"><i x-icon="'arrow-left'"></i>Back</a>
+            <button type="button" class="rh-btn rh-btn--primary" :disabled="jobRunning" @click="startCollection()"><i x-icon="'play'"></i><span x-text="setupJob && setupJob.state !== 'running' ? 'Start again' : 'Start collection'"></span></button>
+            <button type="button" class="rh-btn rh-btn--ghost" x-show="jobRunning" @click="cancelJob()">Cancel</button>
+          </div>
+        </section>
+
+        <section class="rh-panel job">
+          <div class="rh-panel-head">
+            <div><div class="rh-eyebrow">Progress</div><h2 class="rh-h2" x-text="setupJob ? jobLabel(setupJob.kind) : 'Not started'"></h2></div>
+            <template x-if="setupJob"><span class="rh-chip" :class="jobStateClass(setupJob.state)"><i x-icon="jobStateIcon(setupJob.state)"></i><span x-text="jobStateText(setupJob.state)"></span></span></template>
+          </div>
+          <template x-if="!setupJob">
+            <p class="rh-small">Each stage shows here as it runs: Microsoft Sentinel analytics rules, Defender XDR custom detections, table schema, incidents, rule statistics and value checks.</p>
+          </template>
+          <template x-if="setupJob">
+            <div class="rh-form">
+              <ol class="rh-stages">
+                <template x-for="s in setupJob.stages" :key="s.name">
+                  <li class="rh-stage" :class="`is-${s.state}`" :title="stageLook(s.state).text">
+                    <i x-icon="stageLook(s.state).icon"></i>
+                    <span class="rh-stage-name"><span x-text="s.name"></span><span class="rh-sr-only" x-text="`: ${stageLook(s.state).text}`"></span></span>
+                    <span class="rh-stage-count" x-text="s.count ?? ''"></span>
+                    <span class="rh-stage-detail" x-show="s.detail" x-text="s.detail"></span>
+                    <span class="rh-stage-hint" x-show="s.hint" x-text="s.hint"></span>
+                  </li>
+                </template>
+              </ol>
+              <div class="rh-banner is-crit" x-show="setupJob.error" role="alert"><i x-icon="'octagon-x'"></i>
+                <div><div class="rh-pre" x-text="setupJob.error"></div><div class="rh-mt-xs" x-show="setupJob.hint" x-text="setupJob.hint"></div></div></div>
+              <template x-if="jobFix?.kind === 'signin'">
+                <div class="rh-line"><button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="signIn(setup.alias, 'setup')"><i x-icon="'log-in'"></i>Sign in again</button></div>
+              </template>
+              <template x-if="jobFix?.kind === 'roles'">
+                <div class="rh-line"><button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning" @click="retryJob(true)"><i x-icon="'log-in'"></i>Get new tokens and retry</button>
+                  <span class="rh-small">After activating a PIM role: a token issued before the activation does not carry it.</span></div>
+              </template>
+              <details class="plan-batch" x-show="setupJob.log.length">
+                <summary><i x-icon="'chevron-right'"></i>Log</summary>
+                <pre class="rh-code rh-log" x-ref="jobLog" x-text="setupJob.log.join('\n')"></pre>
+              </details>
+            </div>
+          </template>
+        </section>
+      </div>
+    </template>
+
+    <!-- 6. done -->
+    <template x-if="!loading && route.view === 'setup' && setupStep === 'done'">
+      <div class="rh-view setup">
+        <section class="rh-panel rh-form">
+          <div>
+            <div class="rh-eyebrow">Step 6 of 6 · Done</div>
+            <h2 class="rh-h2" x-text="`${tenantName} is connected`"></h2>
+            <div class="rh-panel-sub" x-show="docs.rules">Collected <span class="rh-mono" x-text="docs.rules && fmtDateTime(docs.rules.generatedAt)"></span></div>
+          </div>
+          <section class="rh-tiles" aria-label="What the first collection found">
+            <template x-for="t in doneTiles" :key="t.label">
+              <div class="rh-tile">
+                <span class="rh-tile-icon" :class="t.tone"><i x-icon="t.icon"></i></span>
+                <div class="rh-tile-value rh-num" x-text="t.value === undefined ? '—' : fmtInt(t.value)"></div>
+                <div class="rh-tile-label" x-text="t.label"></div>
+              </div>
+            </template>
+          </section>
+          <template x-if="failedStages.length">
+            <div class="rh-banner is-warn" role="status"><i x-icon="'triangle-alert'"></i>
+              <div>Not everything could be collected.
+                <ul class="setup-failed"><template x-for="s in failedStages" :key="s.name">
+                  <li><b x-text="s.name"></b>: <span x-text="s.hint ?? s.detail"></span></li></template></ul>
+                Fix the role or permission, then use <b>Collect again</b> in Settings.</div></div>
+          </template>
+          <p class="rh-p">Next: pick which values must always be present in <b>Value checks</b>, then run <b>Validate</b> in Data.</p>
+          <div class="rh-line">
+            <button type="button" class="rh-btn rh-btn--primary" @click="finishSetup('#/checks')"><i x-icon="'scan-line'"></i>Review value checks</button>
+            <button type="button" class="rh-btn rh-btn--secondary" @click="finishSetup('#/overview')"><i x-icon="'layout-dashboard'"></i>Open overview</button>
+          </div>
+        </section>
+      </div>
+    </template>
+
+    <!-- ============================================================ SETTINGS -->
+    <template x-if="!loading && route.view === 'settings'">
+      <div class="rh-grid-2">
+        <div class="rh-view">
+          <template x-if="!tenant">
+            <section class="rh-panel"><div class="rh-eyebrow">Get started</div><div class="rh-empty"><strong>No tenant connected yet.</strong>
+              <a class="rh-btn rh-btn--primary rh-mt" href="#/setup" @click.prevent="startNewTenant()"><i x-icon="'plug'"></i>Connect a tenant</a></div></section>
+          </template>
+          <template x-if="tenant">
+            <form class="rh-panel rh-form" @submit.prevent="saveSettings()" novalidate>
+              <div>
+                <div class="rh-eyebrow">Tenant</div>
+                <h2 class="rh-h2" x-text="tenantName"></h2>
+                <div class="rh-panel-sub" x-text="isReadOnly ? 'Demo data: read-only.' : isOffline ? 'Offline tenant: rules read from a markdown repository.' : 'Connection and defaults of this tenant.'"></div>
+              </div>
+              <dl class="rh-status">
+                <dt>Alias</dt><dd class="rh-mono" x-text="tenant"></dd>
+                <template x-if="docs.tenant?.tenantId && !needsReconnect"><dt>Sign-in</dt></template>
+                <template x-if="docs.tenant?.tenantId && !needsReconnect">
+                  <dd><span x-text="signInLabel(signInOf(docs.tenant))"></span>
+                    <span class="rh-small" x-show="isQuickStart"> · Microsoft Graph Command Line Tools and Microsoft Azure PowerShell</span>
+                    <div><button type="button" class="rh-link" x-show="!isReadOnly" @click="reconnectTenant()">Change sign-in</button></div></dd>
+                </template>
+                <template x-if="docs.tenant?.tenantId"><dt>Tenant ID</dt></template>
+                <template x-if="docs.tenant?.tenantId"><dd class="rh-mono" x-text="docs.tenant.tenantId"></dd></template>
+                <template x-if="docs.tenant?.auth?.clientId"><dt>Client ID</dt></template>
+                <template x-if="docs.tenant?.auth?.clientId"><dd class="rh-mono" x-text="docs.tenant.auth.clientId"></dd></template>
+                <template x-if="docs.tenant?.auth?.clientId"><dt>Redirect URI</dt></template>
+                <template x-if="docs.tenant?.auth?.clientId"><dd class="rh-mono" x-text="redirectUri"></dd></template>
+              </dl>
+              <label class="rh-form-field">
+                <span class="rh-form-label">Display name</span>
+                <span class="rh-field"><input type="text" x-model="settingsForm.displayName" :disabled="isReadOnly" autocomplete="off"></span>
+              </label>
+              <div class="rh-line">
+                <label class="rh-field rh-field--num">Incident window
+                  <input type="number" min="1" max="365" x-model.number="settingsForm.incidentDays" :disabled="isReadOnly" aria-label="Incident window in days"> days</label>
+                <label class="rh-field rh-field--num">Validation window
+                  <input type="number" min="1" max="30" x-model.number="settingsForm.validationDays" :disabled="isReadOnly" aria-label="Validation window in days"> days</label>
+              </div>
+              <div class="rh-banner is-info" x-show="settingsMessage" role="status"><i x-icon="'check'"></i><div x-text="settingsMessage"></div></div>
+              <div class="rh-banner is-crit" x-show="settingsError" role="alert"><i x-icon="'octagon-x'"></i><div class="rh-pre" x-text="settingsError"></div></div>
+              <div class="rh-line"><button type="submit" class="rh-btn rh-btn--primary" :disabled="isReadOnly"><i x-icon="'save'"></i>Save settings</button></div>
+            </form>
+          </template>
+
+          <template x-if="tenant && !isOffline && !isReadOnly">
+            <section class="rh-panel rh-form">
+              <div class="rh-panel-head">
+                <div><div class="rh-eyebrow">Workspaces</div><h2 class="rh-h2" x-text="(docs.tenant?.workspaces ?? []).length ? `${docs.tenant.workspaces.length} Microsoft Sentinel workspace${docs.tenant.workspaces.length === 1 ? '' : 's'}` : 'No Sentinel workspace'"></h2></div>
+                <div class="rh-tools"><button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="editWorkspaces()"><i x-icon="'pencil'"></i>Change workspaces</button></div>
+              </div>
+              <ul class="rh-list" x-show="(docs.tenant?.workspaces ?? []).length">
+                <template x-for="w in docs.tenant?.workspaces ?? []" :key="w.workspaceId">
+                  <li><span class="rh-mono" x-text="w.workspaceName"></span> <span class="rh-small" x-text="`· ${w.resourceGroup} · subscription`"></span> <span class="rh-small rh-mono" x-text="w.subscriptionId"></span></li>
+                </template>
+              </ul>
+              <p class="rh-small" x-show="!(docs.tenant?.workspaces ?? []).length">Only Defender XDR custom detections are collected.</p>
+            </section>
+          </template>
+
+          <template x-if="tenant && !isOffline && !isReadOnly">
+            <section class="rh-panel rh-form">
+              <div><div class="rh-eyebrow">Sign-in and data</div>
+                <h2 class="rh-h2" x-text="signedInAs(tenant) ? `Signed in${signedInAs(tenant).upn ? ' as ' + signedInAs(tenant).upn : ''}` : 'Signed out'"></h2>
+                <div class="rh-panel-sub">A sign-in lasts until Detection Rule Health restarts; tokens are kept in memory only.</div></div>
+              <dl class="rh-status">
+                <dt>Last collected</dt><dd :class="{ 'rh-mono': docs.rules }" x-text="docs.rules ? fmtDateTime(docs.rules.generatedAt) : 'Never'"></dd>
+              </dl>
+              <div class="rh-line">
+                <template x-if="signedInAs(tenant)"><button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" @click="signOut()"><i x-icon="'log-out'"></i>Sign out</button></template>
+                <template x-if="!signedInAs(tenant)"><button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="signIn(tenant, 'settings')"><i x-icon="'log-in'"></i>Sign in</button></template>
+                <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning || !signedInAs(tenant)" @click="collectAgain()"><i x-icon="'refresh-cw'"></i>Collect again</button>
+              </div>
+            </section>
+          </template>
+
+          <template x-if="tenant && !isReadOnly">
+            <details class="rh-panel rh-help" :open="removeOpen" @toggle="removeOpen = $event.target.open">
+              <summary><span class="rh-eyebrow">Remove</span><span class="rh-h2 rh-help-title"><i x-icon="'chevron-right'"></i>Remove this tenant</span></summary>
+              <div class="rh-form">
+                <p>Deletes the tenant's folder with its collected data, value-check decisions and notes, and signs it out.
+                  <span x-show="!isQuickStart">The app registration in your tenant stays; delete it in the Microsoft Entra admin center if you no longer need it.</span>
+                  <span x-show="isQuickStart">A consent given to Microsoft Graph Command Line Tools stays; an administrator removes it under Enterprise applications →
+                    Microsoft Graph Command Line Tools → Permissions, if no one else relies on it.</span></p>
+                <label class="rh-form-field">
+                  <span class="rh-form-label">Type <span class="rh-mono" x-text="tenant"></span> to confirm</span>
+                  <span class="rh-field rh-field--short"><input type="text" class="rh-mono" x-model="removeConfirm" autocomplete="off" spellcheck="false"></span>
+                </label>
+                <div class="rh-line"><button type="button" class="rh-btn rh-btn--secondary" :disabled="removeConfirm !== tenant || jobRunning" @click="removeTenant()"><i x-icon="'trash-2'"></i>Remove tenant</button></div>
+              </div>
+            </details>
+          </template>
+        </div>
+
+        <section class="rh-panel rh-form">
+          <div><div class="rh-eyebrow">App</div><h2 class="rh-h2">Detection Rule Health</h2>
+            <div class="rh-panel-sub">Free public beta by Cerberus Cyber Consulting. Runs entirely on this machine.</div></div>
+          <dl class="rh-status">
+            <dt>Version</dt><dd class="rh-mono" x-text="appInfo?.version ?? '—'"></dd>
+            <dt>Update check</dt>
+            <dd>
+              <template x-if="appInfo?.updateCheck === 'enabled'">
+                <span>Daily, against the GitHub Releases API<span x-show="!appInfo.update && appInfo.updateCheckedAt"> · up to date, checked
+                  <span class="rh-mono" x-text="fmtDateTime(appInfo.updateCheckedAt)"></span></span><span x-show="!appInfo.updateCheckedAt"> · not checked yet</span></span>
+              </template>
+              <span x-show="appInfo?.updateCheck === 'disabled'">Off (<span class="rh-mono">RULEHEALTH_UPDATE_CHECK=false</span>)</span><span x-show="!appInfo">—</span>
+            </dd>
+            <dt>Data folder</dt><dd class="rh-mono" x-text="appInfo?.dataFolder ?? '—'"></dd>
+          </dl>
+
+          <!-- A newer release: what changed and how to upgrade. Nothing is downloaded by the app itself. -->
+          <template x-if="appInfo?.update">
+            <div class="rh-fix rh-form">
+              <p><b x-text="`Version ${appInfo.update.latest} is available`"></b>
+                <span x-text="`(you run ${appInfo.update.current}${appInfo.update.publishedAt ? ', released ' + fmtDate(appInfo.update.publishedAt) : ''}).`"></span>
+                <a :href="appInfo.update.url" target="_blank" rel="noopener">Release notes</a></p>
+              <pre class="rh-code rh-update-notes" x-show="appInfo.update.notes" x-text="appInfo.update.notes"></pre>
+              <template x-if="appInfo.runningInContainer">
+                <div class="rh-form">
+                  <p>Upgrade the container; the <span class="rh-mono">drh-data</span> volume keeps your data and decisions. With Docker:</p>
+                  <pre class="rh-code rh-update-commands" x-text="upgradeDocker"></pre>
+                  <p>With Docker Compose: <span class="rh-mono">docker compose pull &amp;&amp; docker compose up -d</span>. You sign in again afterwards.</p>
+                  <div class="rh-line"><button type="button" class="rh-link" @click="copyText(upgradeDocker, 'upgrade')"><i x-icon="setup.copied === 'upgrade' ? 'check' : 'copy'"></i><span x-text="setup.copied === 'upgrade' ? 'Copied' : 'Copy the Docker commands'"></span></button></div>
+                </div>
+              </template>
+              <template x-if="!appInfo.runningInContainer">
+                <p>Running from the repository: <span class="rh-mono">git pull</span>, then start <span class="rh-mono">RuleHealth.cmd</span> again.</p>
+              </template>
+            </div>
+          </template>
+          <ul class="setup-links">
+            <li><a :href="docsUrl('')" target="_blank" rel="noopener"><i x-icon="'book-open'"></i>Documentation</a></li>
+            <li><a :href="docsUrl('privacy/')" target="_blank" rel="noopener"><i x-icon="'shield-check'"></i>Privacy statement</a></li>
+            <li><a :href="docsUrl('license/')" target="_blank" rel="noopener"><i x-icon="'scale'"></i>License (MIT)</a></li>
+            <li><a :href="repoUrl('issues')" target="_blank" rel="noopener"><i x-icon="'message-square'"></i>Report an issue on GitHub</a></li>
+          </ul>
+        </section>
+      </div>
+    </template>
+
+    <!-- ============================================================ DATA (jobs) -->
+    <template x-if="!loading && tenant && route.view === 'data'">
+      <div class="rh-view">
+        <p class="rh-small rh-view-intro"><span x-text="tenantName"></span> · each step runs on this machine; results are saved in the tenant's data folder.</p>
+
+        <div class="rh-banner is-info" x-show="isOffline" x-cloak><i x-icon="'unplug'"></i>
+          <div>This is an offline tenant (rules read from a markdown repository): there is no tenant to collect from or validate against.
+            You can still review the validation queries.</div></div>
+        <div class="rh-banner is-crit" x-show="jobError" x-cloak role="alert"><i x-icon="'octagon-x'"></i><div x-text="jobError"></div></div>
+        <div class="rh-banner is-info" x-show="jobNote" x-cloak role="status"><i x-icon="'info'"></i>
+          <div><span x-text="jobNote"></span>
+            <a href="#/validation" x-show="job?.kind === 'validate' && job?.state === 'succeeded'">Open Validation</a></div></div>
+
+        <div class="rh-grid-2">
+          <div class="rh-view">
+            <!-- 1. collect + extract -->
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Step 1</div>
+                  <h2 class="rh-h2">Update from tenant</h2>
+                  <div class="rh-panel-sub">Rules, table schema, incidents and statistics, then the value checks</div>
+                </div>
+              </div>
+              <dl class="rh-status">
+                <dt>Rules</dt>
+                <dd x-text="docs.rules ? `${fmtInt(docs.rules.rules.length)} rules · collected ${fmtDateTime(docs.rules.generatedAt)}` : 'Not collected yet'"></dd>
+                <dt>Incidents</dt>
+                <dd x-text="docs.incidents ? `${fmtInt(docs.incidents.incidents.length)} in the last ${docs.incidents.window.days} days` : 'Not collected yet'"></dd>
+                <dt>Value checks</dt>
+                <dd>
+                  <span x-text="docs.candidates ? `${fmtInt(docs.candidates.checks.length)} checks · extracted ${fmtDateTime(docs.candidates.generatedAt)}` : 'Not extracted yet'"></span>
+                  <span class="rh-chip tone-warn rh-chip--sm" x-show="extractStale" title="The rules were collected after the last extraction">Out of date</span>
+                </dd>
+              </dl>
+              <div class="rh-line rh-mb">
+                <label class="rh-field rh-field--num">Incident window
+                  <input type="number" min="1" max="365" x-model.number="opts.incidentDays" aria-label="Incident window in days"> days</label>
+                <label class="rh-check"><input type="checkbox" x-model="opts.saveRaw"> Save raw API responses (troubleshooting)</label>
+              </div>
+              <div class="rh-line">
+                <button type="button" class="rh-btn rh-btn--primary" :disabled="jobRunning || isOffline" @click="startJob('refresh')"><i x-icon="'refresh-cw'"></i>Update from tenant</button>
+                <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="jobRunning || isOffline" @click="startJob('collect')" title="Collect only, without extracting the value checks">Collect only</button>
+                <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="jobRunning || isOffline || !docs.rules" @click="startJob('extract')" title="Extract the value checks again from the collected rules">Extract only</button>
+              </div>
+            </section>
+
+            <!-- 2. pick values -->
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Step 2</div>
+                  <h2 class="rh-h2">Pick the values to check</h2>
+                  <div class="rh-panel-sub">Values that must always occur in normal telemetry</div>
+                </div>
+              </div>
+              <p class="rh-p">
+                <b class="rh-num" x-text="fmtInt(validateCount)"></b> marked Validate ·
+                <b class="rh-num" x-text="fmtInt(unreviewedCount)"></b> validatable values not reviewed yet.
+              </p>
+              <a class="rh-link" href="#/checks"><i x-icon="'scan-line'"></i>Open Value checks</a>
+            </section>
+
+            <!-- 3. validate -->
+            <section class="rh-panel">
+              <div class="rh-panel-head">
+                <div>
+                  <div class="rh-eyebrow">Step 3</div>
+                  <h2 class="rh-h2">Validate</h2>
+                  <div class="rh-panel-sub">Count each selected value in the tenant's data</div>
+                </div>
+              </div>
+              <dl class="rh-status">
+                <dt>Last run</dt>
+                <dd>
+                  <template x-if="!docs.validation"><span>Never</span></template>
+                  <template x-if="docs.validation">
+                    <span class="rh-line">
+                      <span x-text="`${fmtDateTime(docs.validation.runAt)} · last ${docs.validation.windowDays} days`"></span>
+                      <template x-for="c in validationCounts" :key="c.verdict">
+                        <span class="rh-chip rh-chip--sm" :class="verdictLook(c.verdict).cls"><i x-icon="verdictLook(c.verdict).icon"></i><span x-text="`${c.count} ${verdictInfo(c.verdict).label.toLowerCase()}`"></span></span>
+                      </template>
+                    </span>
+                  </template>
+                </dd>
+              </dl>
+              <div class="rh-line rh-mb">
+                <label class="rh-field rh-field--num">Window
+                  <input type="number" min="1" max="30" x-model.number="opts.validationDays" @change="plan = null" aria-label="Validation window in days"> days</label>
+                <label class="rh-check" title="Basic and Auxiliary plan tables are queried with /search, which is billed per GB scanned">
+                  <input type="checkbox" x-model="opts.includeBasic" @change="plan = null"> Include Basic/Auxiliary tables (billed per GB scanned)</label>
+                <label class="rh-check"><input type="checkbox" x-model="opts.saveRaw"> Save raw API responses</label>
+              </div>
+              <div class="rh-line">
+                <button type="button" class="rh-btn rh-btn--ghost" :disabled="planLoading || !docs.candidates" @click="loadPlan()"><i x-icon="'file-code'"></i><span x-text="planLoading ? 'Preparing…' : 'Review queries'"></span></button>
+                <button type="button" class="rh-btn rh-btn--secondary" :disabled="jobRunning || isOffline || !validateCount" @click="startJob('validate')"><i x-icon="'play'"></i>Run validation</button>
+                <span class="rh-small" x-show="!validateCount">Mark values as Validate first.</span>
+              </div>
+
+              <div class="rh-banner is-warn rh-mt" x-show="planError" x-cloak><i x-icon="'triangle-alert'"></i><div x-text="planError"></div></div>
+              <template x-if="plan">
+                <div class="plan">
+                  <p class="rh-p" x-text="plan.summary"></p>
+                  <template x-for="note in plan.notes" :key="note"><div class="rh-banner is-warn"><i x-icon="'triangle-alert'"></i><div x-text="note"></div></div></template>
+                  <!-- Index key: a table with more than 50 selected values has several batches with the same table and target. -->
+                  <template x-for="(b, i) in planBatches" :key="i">
+                    <details class="plan-batch">
+                      <summary><i x-icon="'chevron-right'"></i><span class="rh-mono" x-text="b.table"></span> <span class="rh-small" x-show="b.part" x-text="`(${b.part})`"></span>
+                        <span class="rh-small" x-text="`· ${b.checks} value${b.checks === 1 ? '' : 's'} · via ${b.target}`"></span></summary>
+                      <pre class="rh-code" x-text="b.kql"></pre>
+                    </details>
+                  </template>
+                  <template x-for="g in planReasons" :key="g.verdict + g.reason">
+                    <details class="plan-batch">
+                      <summary><i x-icon="'chevron-right'"></i><span class="rh-chip rh-chip--sm" :class="g.verdict === 'error' ? 'is-error' : 'is-skipped'" x-text="g.verdict === 'error' ? 'Does not bind' : 'Skipped'"></span>
+                        <span x-text="`${g.items.length} value${g.items.length === 1 ? '' : 's'}: ${g.reason}`"></span></summary>
+                      <ul class="plan-items">
+                        <template x-for="d in g.items.slice(0, 50)" :key="d.checkId">
+                          <li><span class="rh-mono" x-text="`${d.table}.${d.path ?? d.column}`"></span> <span class="rh-op" x-text="opLabel(d.operatorClass)"></span> <span class="check-value" x-text="d.value"></span></li>
+                        </template>
+                        <li class="rh-small" x-show="g.items.length > 50" x-text="`… and ${g.items.length - 50} more`"></li>
+                      </ul>
+                    </details>
+                  </template>
+                  <p class="rh-small">Reviewing sends nothing to the tenant. Run validation sends exactly these queries.</p>
+                </div>
+              </template>
+            </section>
+          </div>
+
+          <!-- job activity -->
+          <section class="rh-panel job">
+            <div class="rh-panel-head">
+              <div><div class="rh-eyebrow">Activity</div><h2 class="rh-h2" x-text="job ? jobLabel(job.kind) : 'No job in this session'"></h2>
+                <div class="rh-panel-sub" x-show="job" x-text="job && `Started ${fmtDateTime(job.startedAt)}${job.finishedAt ? ' · finished ' + fmtDateTime(job.finishedAt) : ''}`"></div></div>
+              <div class="rh-tools">
+                <template x-if="job"><span class="rh-chip" :class="jobStateClass(job.state)"><i x-icon="jobStateIcon(job.state)"></i><span x-text="jobStateText(job.state)"></span></span></template>
+                <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" x-show="jobRunning" @click="cancelJob()">Cancel</button>
+              </div>
+            </div>
+            <template x-if="!job">
+              <p class="rh-small" x-text="isOffline ? 'An offline tenant has nothing to collect or validate. Review queries in Step 3 shows what validation would send.' : 'Start with Update from tenant in Step 1; its log appears here.'"></p>
+            </template>
+            <template x-if="job">
+              <div class="rh-form">
+                <p class="rh-job-summary" x-show="job.summary" x-text="job.summary"></p>
+                <div class="rh-banner is-crit" x-show="job.error" role="alert"><i x-icon="'octagon-x'"></i>
+                  <div><div class="rh-pre" x-text="job.error"></div><div class="rh-mt-xs" x-show="job.hint" x-text="job.hint"></div></div></div>
+                <div class="rh-banner is-warn" x-show="!job.error && job.hint" role="status"><i x-icon="'triangle-alert'"></i><div x-text="job.hint"></div></div>
+                <ol class="rh-stages" x-show="job.stages?.length">
+                  <template x-for="s in job.stages ?? []" :key="s.name">
+                    <li class="rh-stage" :class="`is-${s.state}`" :title="stageLook(s.state).text">
+                      <i x-icon="stageLook(s.state).icon"></i>
+                      <span class="rh-stage-name"><span x-text="s.name"></span><span class="rh-sr-only" x-text="`: ${stageLook(s.state).text}`"></span></span>
+                      <span class="rh-stage-count" x-text="s.count ?? ''"></span>
+                      <span class="rh-stage-detail" x-show="s.detail" x-text="s.detail"></span>
+                    </li>
+                  </template>
+                </ol>
+
+                <!-- What to do about the failure: sign in again, PIM hint, consent prompt, or just retry -->
+                <template x-if="jobFix">
+                  <div class="rh-fix">
+                    <template x-if="jobFix.kind === 'reconnect'">
+                      <div class="rh-form">
+                        <p><b>This tenant has to be connected again</b>, with your own app registration or with Microsoft's apps. The alias, the collected data and your decisions stay.</p>
+                        <div class="rh-line">
+                          <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="reconnectTenant()"><i x-icon="'plug'"></i>Connect again</button>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="jobFix.kind === 'signin'">
+                      <div class="rh-form">
+                        <p><b>Not signed in to this tenant.</b> A sign-in lasts until Detection Rule Health restarts; sign in, then run the step again.</p>
+                        <div class="rh-line">
+                          <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" @click="signIn(tenant, 'data')"><i x-icon="'log-in'"></i>Sign in</button>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="jobFix.kind === 'roles'">
+                      <div class="rh-form">
+                        <p><b>The sign-in worked, but Defender XDR sees no permissions for your account.</b>
+                          This is about your role, not the app<span x-show="jobFix.tokenInfo"> (directory roles active in the token:
+                          <b x-text="jobFix.tokenInfo?.roles"></b>)</span>.</p>
+                        <ol class="steps-list">
+                          <li>If Security Reader (or your Defender XDR role) is a <b>PIM</b> role, activate it in Entra ID → Privileged Identity Management.</li>
+                          <li>Choose <b>Get new tokens and retry</b>: a token issued before the activation does not carry the role.</li>
+                          <li>No PIM? Ask for Security Reader, or a Defender XDR Unified RBAC role with security data read.</li>
+                        </ol>
+                        <div class="rh-line">
+                          <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning" @click="retryJob(true)"><i x-icon="'log-in'"></i>Get new tokens and retry</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="jobRunning" @click="retryJob()">Retry</button>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="jobFix.kind === 'consent' && isQuickStart">
+                      <div class="rh-form">
+                        <p><b>Microsoft Graph Command Line Tools is missing consent in this tenant.</b> An administrator signs in with
+                          <b>Sign in and consent</b> and consents to the security permissions. That consent also applies to everyone's Graph
+                          PowerShell in the tenant; if that is not acceptable, switch to your own app registration.</p>
+                        <div class="rh-line">
+                          <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning" @click="signIn(tenant, 'data', true)"><i x-icon="'key-round'"></i>Sign in and consent…</button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="jobRunning" @click="retryJob()">Retry</button>
+                          <button type="button" class="rh-link" @click="reconnectTenant()">Change sign-in</button>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="jobFix.kind === 'consent' && !isQuickStart">
+                      <div class="rh-form">
+                        <p><b>Your app registration is missing consent in this tenant.</b> An administrator approves its permissions once
+                          for the whole tenant; the prompt lists everything the app registration asks for.</p>
+                        <div class="rh-line">
+                          <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning || !adminConsentUrl(docs.tenant, 'data')" @click="grantConsent('data')"><i x-icon="'key-round'"></i>Grant admin consent…</button>
+                          <button type="button" class="rh-link" x-show="adminConsentUrl(docs.tenant, 'data')" @click="copyText(adminConsentUrl(docs.tenant, 'data'), 'consent')"><i x-icon="setup.copied === 'consent' ? 'check' : 'copy'"></i><span x-text="setup.copied === 'consent' ? 'Copied' : 'Copy link for an admin'"></span></button>
+                          <button type="button" class="rh-btn rh-btn--ghost rh-btn--sm" :disabled="jobRunning" @click="retryJob()">Retry</button>
+                        </div>
+                      </div>
+                    </template>
+                    <template x-if="jobFix.kind === 'retry'">
+                      <div class="rh-line">
+                        <button type="button" class="rh-btn rh-btn--secondary rh-btn--sm" :disabled="jobRunning" @click="retryJob()"><i x-icon="'refresh-cw'"></i>Retry</button>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <p class="rh-small" x-show="jobRunning && job.log.length === 0">Starting.</p>
+                <pre class="rh-code rh-log" x-ref="jobLog" x-text="job.log.join('\n')" x-show="job.log.length"></pre>
+              </div>
+            </template>
+          </section>
+        </div>
+      </div>
+    </template>
+    </div>
+  </main>
+</div>
+</body>
+</html>

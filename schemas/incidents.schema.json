@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/incidents.schema.json",
+  "title": "Incidents in the collection window, linked to the rules that raised them",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string",
+      "description": "Tenant alias = folder name under data/"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "to": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "days": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "from",
+        "to",
+        "days"
+      ],
+      "additionalProperties": false
+    },
+    "incidents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "incidentId": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "sentinel",
+              "defender"
+            ]
+          },
+          "number": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "severity": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "open",
+              "closed"
+            ]
+          },
+          "classification": {
+            "enum": [
+              "TP",
+              "BP",
+              "FP",
+              "Undetermined",
+              null
+            ],
+            "description": "null while open. Graph: truePositive\u2192TP, informationalExpectedActivity\u2192BP, falsePositive\u2192FP, unknown\u2192Undetermined. SecurityIncident: TruePositive/BenignPositive/FalsePositive/Undetermined."
+          },
+          "ruleIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Every rule that contributed an alert to this incident"
+          }
+        },
+        "required": [
+          "incidentId",
+          "source",
+          "title",
+          "createdAt",
+          "status",
+          "classification",
+          "ruleIds"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "generatedAt",
+    "window",
+    "incidents"
+  ],
+  "additionalProperties": false
+}

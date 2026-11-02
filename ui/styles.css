@@ -1,0 +1,215 @@
+/* RuleHealth UI: app-specific layout only. Look and feel come from ui/brand/ (cerberus-tokens.css,
+   rulehealth-theme.css, the rh-* components); every value below is a brand token. Dark only
+   (brand Watch Console). Run pwsh tools/Test-BrandCompliance.ps1 after every change. */
+
+/* ---------------------------------------------------------------- base */
+[x-cloak] { display: none !important; }
+:where(button, select, input, textarea) { font: inherit; color: inherit; }
+/* Icons drawn by the x-icon directive: the <i> only wraps the SVG. */
+i[x-icon] { display: inline-flex; align-items: center; font-style: normal; }
+.rh-add-tenant { justify-content: center; margin-top: 6px; }
+h1, h2, h3 { margin: 0; }
+
+/* ---------------------------------------------------------------- shared view layout */
+.rh-view { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.rh-view-intro { margin: -8px 0 0; }
+.rh-tile-sub, .rh-panel-sub { overflow-wrap: anywhere; }
+.rh-tile-value--date { font-size: 22px; font-family: var(--font-mono); font-weight: var(--w-medium); }
+.rh-mt { margin-top: 10px; }
+.rh-mt-xs { margin-top: 4px; }
+.rh-mb { margin-bottom: 14px; }
+.rh-p { margin: 0 0 12px; color: var(--rh-text-2); }
+.rh-note { margin: 0 0 12px; }
+.rh-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.rh-banner-line { margin-top: 4px; }
+.rh-stack-sm { display: flex; flex-direction: column; }
+.rh-stack-sm > .rh-banner { margin-top: 10px; }
+.rh-chart.is-short { height: 240px; }
+
+/* Compact number field: "FP ≥ [30] %", "Window [30] days". */
+
+/* Tables: rule names read as primary text, the accent appears on hover (specimen tables). */
+.rh-table td.is-primary a, .rh-rule-links a, .rule-list a { color: var(--rh-text); }
+.rh-table tr:hover td.is-primary a, .rh-table td.is-primary a:focus-visible,
+.rh-rule-links a:hover, .rh-rule-links a:focus-visible, .rule-list a:hover, .rule-list a:focus-visible { color: var(--rh-accent); }
+.rh-table tbody tr.is-clickable { cursor: pointer; }
+.rh-table td.is-low-n-cell { color: var(--rh-text-3); } /* fewer than 5 classified incidents */
+.rh-rule-links div + div { margin-top: 4px; }
+
+/* Filter rows (Rules, Value checks). */
+.rh-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+.rh-filters .rh-select, .rh-filters .rh-search { padding: 7px 10px; }
+.rh-filters-search { flex: 1 1 260px; max-width: 380px; }
+.rh-filters--last { margin-bottom: 0; }
+.rh-filters-checks { display: flex; flex-wrap: wrap; gap: 8px 18px; width: 100%; }
+
+/* Panel whose rows run edge to edge (value-check rows). */
+
+/* ---------------------------------------------------------------- Overview */
+/* Rule picker for the per-rule trend: a <details> dropdown; its <summary> is an rh-btn. */
+.picker { position: relative; }
+.picker > summary { list-style: none; user-select: none; }
+.picker > summary::-webkit-details-marker { display: none; }
+.picker-panel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 460px; max-width: 90vw;
+  background: var(--rh-raised); border: 1px solid var(--rh-border-strong); border-radius: var(--radius-md); padding: 12px;
+}
+.picker-panel .picker-top { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.picker-panel .picker-top .rh-search { flex: 1; min-width: 0; padding: 6px 10px; }
+.picker-panel ul { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.picker-panel li .rh-check { display: flex; padding: 5px 6px; border-radius: var(--radius-sm); }
+.picker-panel li .rh-check:hover { background: var(--rh-hover); }
+.picker-panel li .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--rh-text); }
+.picker-panel li input:disabled ~ .name { color: var(--rh-text-3); }
+/* Issue categories report: stacked per-category tables with aligned columns. */
+.category-group { margin-top: 18px; }
+table.category-table { table-layout: fixed; }
+table.category-table td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- Rules */
+.rh-health-strip { margin-bottom: 14px; align-items: center; }
+/* Sortable column header: the button inherits the th look; the chevron shows the sort direction. */
+/* Rows whose rule needs attention: a quiet tint of the state's fill (the health chip carries the text). */
+.rh-health-row.h-absent td { background: color-mix(in srgb, var(--rh-crit-fill) 55%, transparent); }
+.rh-health-row.h-table-empty td { background: color-mix(in srgb, var(--rh-warn-fill) 55%, transparent); }
+.rh-health-row.h-error td { background: var(--rh-neutral-fill); }
+.rh-health-row:hover td { background-image: linear-gradient(var(--rh-hover), var(--rh-hover)); }
+.rh-health-row.h-disabled td, .rh-health-row.h-disabled td.is-primary a { color: var(--rh-text-3); }
+/* Names get room; the short columns stay on one line (the table scrolls sideways below 1280px). */
+.rh-rules-table td:not(.is-primary) { white-space: nowrap; }
+.rh-rules-table td.is-primary { min-width: 170px; }
+.rh-rules-table th, .rh-rules-table td { padding-left: 7px; padding-right: 7px; }
+.rh-rules-table th { letter-spacing: 0.06em; white-space: normal; vertical-align: bottom; }
+.rh-rules-table th.is-nowrap { white-space: nowrap; }
+.rh-rules-table td.is-wrap { white-space: normal; min-width: 96px; }
+
+/* ---------------------------------------------------------------- Rule detail */
+.rh-back { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 13px; }
+.rh-detail-title { margin: 6px 0 12px; }
+.rh-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.rh-id { font-weight: var(--w-medium); letter-spacing: 0; border-radius: var(--radius-sm); white-space: normal; word-break: break-all; }
+.rh-desc { margin: 0 0 16px; color: var(--rh-text-2); max-width: 110ch; }
+/* Query with highlighted comparisons. <mark> gets no UA yellow: the rh-hl modifiers draw it. */
+.rh-query mark, .rh-hl-legend mark { background: none; color: inherit; }
+.rh-query mark[data-checks], .rh-query mark[data-unresolved] { cursor: context-menu; }
+.rh-hl-legend { margin-top: 12px; }
+.rh-hl-legend mark { font-family: var(--font-mono); font-size: var(--text-xs); padding: 1px 6px; font-variant-ligatures: none; }
+/* Right-click menu on a highlighted comparison. On carbon, elevation = lighter fill + border, no shadow. */
+.ctx-menu {
+  position: fixed; z-index: 50; width: min(580px, calc(100vw - 16px)); max-height: 70vh; overflow: auto;
+  background: var(--rh-raised); border: 1px solid var(--rh-border-strong); border-radius: var(--radius-md);
+  padding: 14px 16px; font-size: 13px;
+}
+.ctx-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; }
+.ctx-expression {
+  flex: 1; min-width: 0; color: var(--rh-text-2); font-family: var(--font-mono); font-size: var(--text-xs); font-variant-ligatures: none;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 4.8em; overflow: hidden; /* a has_any list can be long; the rows below show every value */
+}
+.ctx-all { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 4px 0 10px; border-bottom: 1px solid var(--rh-border); }
+.ctx-all .rh-small { margin-right: auto; }
+.ctx-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--rh-border-subtle); }
+.ctx-value { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.ctx-value .rh-chip--sm { margin-left: 0; }
+.ctx-note { margin: 10px 0 0; }
+/* Investigation notes: a quiet list separated by hairlines, newest first. */
+.note-form { display: flex; flex-direction: column; gap: 10px; }
+.note-form textarea { min-height: 64px; }
+.note-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.note-list { list-style: none; margin: 16px 0 0; padding: 0; }
+.note { padding: 12px 0; border-top: 1px solid var(--rh-border-subtle); }
+.note-meta { display: flex; gap: 6px; align-items: center; font-size: var(--text-xs); color: var(--rh-text-3); }
+.note-meta .rh-icon { width: 13px; height: 13px; }
+.note-meta .rh-link { margin-left: auto; font-size: var(--text-xs); }
+.note-text { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 6px; color: var(--rh-text); }
+
+/* ---------------------------------------------------------------- value rows (Rule detail, Value checks) */
+/* main text · verdict chip · Validate/Ignore/— control. `.decision` on the rh-seg is a JS hook only. */
+.check-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 14px; align-items: center;
+  padding: 10px 22px; border-top: 1px solid var(--rh-border-subtle);
+}
+.check-row:hover { background: var(--rh-hover); }
+.check-row:focus-visible { outline-offset: -2px; }
+.check-row:focus-within, .check-row:focus { background: var(--rh-selected); }
+.check-row--note { grid-template-columns: 1fr; }
+.check-main { min-width: 0; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.check-value { font-family: var(--font-mono); font-size: 13px; font-weight: var(--w-medium); word-break: break-all; color: var(--rh-text); font-variant-ligatures: none; }
+.check-row .rh-chip--sm { margin-left: 0; }
+.rh-col { color: var(--rh-text-2); font-size: var(--text-xs); }
+.rh-expr { flex-basis: 100%; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--rh-text-3); font-variant-ligatures: none; white-space: pre-wrap; word-break: break-word; }
+.rule-list {
+  grid-column: 1 / -1; list-style: none; margin: 2px 0; padding: 10px 14px; display: grid; gap: 8px;
+  background: var(--rh-sunken); border-radius: var(--radius-sm); font-size: 13px;
+}
+.rule-list li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.rule-list .rh-expr { flex-basis: auto; }
+
+/* ---------------------------------------------------------------- Value checks (workbench) */
+.wb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 22px; align-items: start; }
+.wb-side { position: sticky; top: 92px; display: grid; gap: 16px; }
+.rh-table-name { font-size: var(--text-base); }
+.col-group { border-top: 1px solid var(--rh-border); }
+.col-head { display: flex; align-items: center; gap: 10px; padding: 12px 22px; background: var(--rh-sunken); flex-wrap: wrap; }
+.col-head .rh-tools { margin-left: auto; }
+.rh-used-by { font-size: var(--text-xs); }
+.rh-used-by .rh-icon { width: 14px; height: 14px; }
+
+/* ---------------------------------------------------------------- Validation */
+.rh-verdict-title { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+
+/* ---------------------------------------------------------------- Add tenant, Data (forms and jobs) */
+/* Status list at the top of each Data step. */
+/* Query review: one collapsible block per batch. minmax(0, 1fr) keeps a long KQL line inside the panel. */
+.plan { margin-top: 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.plan-batch { border: 1px solid var(--rh-border); border-radius: var(--radius-sm); background: var(--rh-sunken); }
+.plan-batch > summary { cursor: pointer; padding: 8px 12px; font-size: 13px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; list-style: none; }
+.plan-batch > summary::-webkit-details-marker { display: none; }
+.plan-batch > summary .rh-icon { width: 14px; height: 14px; color: var(--rh-text-3); transition: transform var(--rh-fast) var(--rh-ease); }
+.plan-batch[open] > summary .rh-icon { transform: rotate(90deg); }
+.plan-batch > summary:hover { background: var(--rh-hover); }
+.plan-batch .rh-code { margin: 0; border: 0; border-top: 1px solid var(--rh-border); border-radius: 0 0 var(--radius-sm) var(--radius-sm); max-height: 360px; }
+.plan-items { margin: 0; padding: 6px 12px 10px 30px; font-size: 13px; max-height: 260px; overflow: auto; }
+/* Activity panel. */
+.job { position: sticky; top: 92px; }
+.rh-job-summary { font-weight: var(--w-semibold); color: var(--rh-text); }
+.rh-log { margin: 0; max-height: 60vh; white-space: pre-wrap; word-break: break-word; font-size: var(--text-xs); line-height: 1.5; }
+/* What to do about a failed job. */
+.steps-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+
+/* ---------------------------------------------------------------- narrow screens and forced colours */
+@media (max-width: 1279px) {
+  .rh-grid-2, .wb-layout { grid-template-columns: minmax(0, 1fr); }
+  .wb-side, .job { position: static; }
+}
+@media (forced-colors: active) {
+  .rh-seg button[aria-pressed="true"] { outline: 2px solid CanvasText; }
+}
+/* Rules per table, table twin: one column per health group; headers may wrap to keep it on screen. */
+.rh-tables-table th { white-space: normal; vertical-align: bottom; letter-spacing: 0.06em; }
+.rh-tables-table th, .rh-tables-table td { padding-left: 8px; padding-right: 8px; }
+.rh-tables-table td.is-primary { white-space: nowrap; }
+.rh-tables-table .rh-sw { margin-right: 4px; }
+.rh-tables-table .rh-chip { font-family: var(--font-sans); }
+/* Overview: rule health donut + its legend table side by side. */
+.rh-health-overview { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: 28px; align-items: center; }
+.rh-chart--donut { height: 280px; }
+.rh-health-legend td .rh-sw { margin-right: 8px; }
+@media (max-width: 1279px) { .rh-health-overview { grid-template-columns: minmax(0, 1fr); } }
+/* Setup wizard (#/setup/<step>): one panel per step, readable line length; two-column steps use rh-grid-2. */
+.setup.rh-view { max-width: 1120px; }
+.setup .rh-form-field > .rh-field--num, .setup .rh-form-field > .rh-select { justify-self: start; }
+.setup-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; color: var(--rh-text-2); }
+.setup-points li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+.setup-points .rh-icon { width: 18px; height: 18px; color: var(--rh-accent); margin-top: 1px; }
+.setup-points b { color: var(--rh-text); }
+.setup-copy { flex: 1 1 200px; min-width: 0; }
+.setup-failed { margin: 6px 0; padding-left: 18px; }
+.setup-links { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.setup-links a { display: inline-flex; align-items: center; gap: 8px; }
+.setup-links .rh-icon { width: 16px; height: 16px; }
+/* Update check: the topbar hint is a link styled as a chip; release notes stay short and wrap. */
+.rh-update-chip { text-decoration: none; }
+.rh-update-chip:hover { text-decoration: underline; text-underline-offset: 3px; }
+.rh-update-notes { max-height: 160px; overflow: auto; white-space: pre-wrap; font-size: var(--text-xs); }
+.rh-update-commands { white-space: pre-wrap; overflow-wrap: anywhere; }

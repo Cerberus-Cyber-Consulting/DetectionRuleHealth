@@ -1,0 +1,59 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        { "name": "IncidentName", "type": "string" },
+        { "name": "IncidentNumber", "type": "int" },
+        { "name": "Title", "type": "string" },
+        { "name": "Severity", "type": "string" },
+        { "name": "Status", "type": "string" },
+        { "name": "Classification", "type": "string" },
+        { "name": "CreatedTime", "type": "datetime" },
+        { "name": "ClosedTime", "type": "datetime" },
+        { "name": "RelatedAnalyticRuleIds", "type": "dynamic" },
+        { "name": "ProviderName", "type": "string" },
+        { "name": "ProviderIncidentId", "type": "string" },
+        { "name": "Redirected", "type": "bool" }
+      ],
+      "rows": [
+        [
+          "aaaaaaaa-0000-4000-8000-000000000001", 11, "Suspicious PowerShell download", "High", "Closed", "TruePositive",
+          "2026-10-01T08:00:00Z", "2026-10-02T09:30:00Z",
+          "[\"/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules/73E01A99-5CD7-4139-A149-9F2736FF2AB5\"]",
+          "Azure Sentinel", "", false
+        ],
+        [
+          "aaaaaaaa-0000-4000-8000-000000000002", 12, "Break-glass account sign-in", "Medium", "New", "",
+          "2026-10-10T12:00:00Z", null,
+          "[\"a1b2c3d4-0000-4000-8000-000000000002\"]",
+          "Microsoft XDR", "1002", false
+        ],
+        [
+          "aaaaaaaa-0000-4000-8000-000000000003", 13, "Merged into another incident", "Medium", "Closed", "Undetermined",
+          "2026-10-03T12:00:00Z", "2026-10-03T12:05:00Z",
+          "[\"73e01a99-5cd7-4139-a149-9f2736ff2ab5\"]",
+          "Microsoft XDR", "1003", true
+        ],
+        [
+          "aaaaaaaa-0000-4000-8000-000000000004", 14, "Defender-only incident synced to Sentinel", "Low", "Closed", "FalsePositive",
+          "2026-10-04T12:00:00Z", "2026-10-05T12:00:00Z",
+          "[]",
+          "Microsoft XDR", "1001", false
+        ],
+        [
+          "aaaaaaaa-0000-4000-8000-000000000005", 15, "Incident from a deleted rule", "Low", "Closed", "",
+          "2026-09-01T12:00:00Z", "2026-09-02T12:00:00Z",
+          "[\"DEADBEEF-0000-4000-8000-000000000009\"]",
+          "Azure Sentinel", "", false
+        ],
+        [
+          "aaaaaaaa-0000-4000-8000-000000000006", 16, "Deleted incident", "Low", "Deleted", "",
+          "2026-10-09T12:00:00Z", null,
+          "[\"73e01a99-5cd7-4139-a149-9f2736ff2ab5\"]",
+          "Microsoft XDR", "1099", false
+        ]
+      ]
+    }
+  ]
+}

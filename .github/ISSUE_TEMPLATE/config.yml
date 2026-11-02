@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth/security/advisories/new
+    about: Report privately. Please do not open a public issue for security problems.
+  - name: Setup guide and troubleshooting
+    url: https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/troubleshooting/
+    about: Most sign-in errors (AADSTS…) are explained here.

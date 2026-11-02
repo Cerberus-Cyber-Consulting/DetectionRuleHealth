@@ -1,0 +1,8 @@
+{
+  "error": "invalid_grant",
+  "error_description": "AADSTS70043: The refresh token has expired or is invalid due to sign-in frequency checks by conditional access. Trace ID: 00000000-0000-0000-0000-000000000001 Correlation ID: 00000000-0000-0000-0000-0000000000c1 Timestamp: 2026-10-27 08:00:00Z",
+  "error_codes": [70043],
+  "timestamp": "2026-10-27 08:00:00Z",
+  "trace_id": "00000000-0000-0000-0000-000000000001",
+  "correlation_id": "00000000-0000-0000-0000-0000000000c1"
+}

@@ -1,0 +1,27 @@
+title: Detection Rule Health
+description: >-
+  Free, local overview of Microsoft Sentinel analytics rules and Defender XDR custom detections:
+  efficacy per rule and checks that the values your rules depend on still exist.
+url: https://cerberus-cyber-consulting.github.io
+baseurl: /DetectionRuleHealth
+repository: Cerberus-Cyber-Consulting/DetectionRuleHealth
+image: ghcr.io/cerberus-cyber-consulting/detectionrulehealth
+lang: en
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  auto_ids: true
+  syntax_highlighter: rouge
+permalink: pretty
+defaults:
+  - scope: { path: "" }
+    values: { layout: default }
+
+# No theme, no plugins that load external resources, no analytics.
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor

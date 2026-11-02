@@ -1,0 +1,49 @@
+{
+  "@odata.context": "https://graph.microsoft.com/beta/$metadata#security/rules/detectionRules",
+  "value": [
+    {
+      "@odata.type": "#microsoft.graph.security.detectionRule",
+      "id": "office-encoded-powershell",
+      "displayName": "Office spawning encoded PowerShell",
+      "status": "enabled",
+      "createdBy": "analyst@contoso.com",
+      "createdDateTime": "2026-05-01T09:00:00Z",
+      "lastModifiedDateTime": "2026-09-20T14:05:00Z",
+      "lastModifiedBy": "analyst@contoso.com",
+      "schedule": { "frequency": "PT1H" },
+      "queryCondition": {
+        "queryText": "DeviceProcessEvents\n| where InitiatingProcessFileName in~ (\"winword.exe\", \"excel.exe\")\n| where ProcessCommandLine has \"-enc\"",
+        "lastModifiedDateTime": "2026-09-20T14:05:00Z"
+      },
+      "detectionAction": {
+        "alertTemplate": {
+          "title": "Office spawned encoded PowerShell",
+          "description": "An Office application started PowerShell with an encoded command.",
+          "severity": "high",
+          "tactics": ["execution"]
+        },
+        "organizationalScope": null,
+        "automatedActions": []
+      }
+    },
+    {
+      "@odata.type": "#microsoft.graph.security.detectionRule",
+      "id": "6c1f2a9e-1d55-4a7e-9a0c-3a2b5c7d9e01",
+      "displayName": "Rare LSASS access",
+      "status": "autoDisabled",
+      "detectorId": "0E5C2A39-INTERNAL-DETECTOR",
+      "lastModifiedDateTime": "2026-08-02T00:00:00Z",
+      "schedule": { "frequency": "P1D" },
+      "queryCondition": { "queryText": "DeviceEvents | where ActionType == \"OpenProcessApiCall\"" },
+      "detectionAction": { "alertTemplate": { "title": "Rare LSASS access", "severity": "Medium" } }
+    },
+    {
+      "@odata.type": "#microsoft.graph.security.detectionRule",
+      "id": "future/status rule",
+      "displayName": "Rule with a status this version does not know",
+      "status": "unknownFutureValue",
+      "queryCondition": { "queryText": "" },
+      "detectionAction": { "alertTemplate": { "title": "Status rule alert" } }
+    }
+  ]
+}

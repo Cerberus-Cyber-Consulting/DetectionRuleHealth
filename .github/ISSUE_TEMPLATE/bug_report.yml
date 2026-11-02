@@ -1,0 +1,74 @@
+name: Bug report
+description: Something in Detection Rule Health does not work as described.
+labels: [bug, beta]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing the beta.
+
+        **Never paste tenant data in a public issue**: no tenant IDs, user names, workspace names,
+        rule queries from a customer, incident details, tokens or screenshots of real data.
+        Replace them with placeholders such as `<tenant-id>`.
+
+        Security problems: do not open an issue, use **Security → Report a vulnerability** instead.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the app footer and under Settings, or run `docker exec detectionrulehealth /app/rulehealth --version`.
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: dropdown
+    id: runtime
+    attributes:
+      label: Container runtime
+      options:
+        - Docker Desktop (Windows)
+        - Docker Desktop (macOS)
+        - Docker Engine (Linux)
+        - Docker Engine in WSL2
+        - Podman / Podman Desktop
+        - Rancher Desktop
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Setup wizard / app registration
+        - Sign-in
+        - Data collection
+        - Overview / rule statistics
+        - Value checks / validation
+        - Update check
+        - Docs / README
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      description: "`docker logs detectionrulehealth`. Remove anything tenant-specific first. Error codes such as AADSTS50011 are useful."
+      render: text
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Check
+      options:
+        - label: I removed tenant IDs, user names, workspace names and other tenant data from this report.
+          required: true

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/validation.schema.json",
+  "title": "Result of `rulehealth validate` for every check with state=validate",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string"
+    },
+    "runAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "windowDays": {
+      "type": "integer"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "checkId": {
+            "type": "string"
+          },
+          "table": {
+            "type": "string"
+          },
+          "column": {
+            "type": "string"
+          },
+          "path": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operatorClass": {
+            "enum": [
+              "eq",
+              "eq_ci",
+              "has",
+              "has_cs",
+              "contains",
+              "contains_cs",
+              "startswith",
+              "startswith_cs",
+              "endswith",
+              "endswith_cs",
+              "hasprefix",
+              "hasprefix_cs",
+              "hassuffix",
+              "hassuffix_cs",
+              "regex",
+              "like",
+              "like_cs"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "present",
+              "absent",
+              "table-empty",
+              "error",
+              "skipped"
+            ],
+            "description": "table-empty = the table had no rows in the window (connector problem, not a rule problem)"
+          },
+          "matchCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "tableRowCount": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "lastSeenAt": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "engine": {
+            "enum": [
+              "loganalytics",
+              "hunting"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "checkId",
+          "table",
+          "column",
+          "path",
+          "operatorClass",
+          "value",
+          "verdict",
+          "matchCount",
+          "tableRowCount",
+          "lastSeenAt",
+          "engine",
+          "error"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "table": {
+            "type": "string"
+          },
+          "engine": {
+            "enum": [
+              "loganalytics",
+              "hunting"
+            ]
+          },
+          "kql": {
+            "type": "string"
+          },
+          "durationMs": {
+            "type": "integer"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "table",
+          "engine",
+          "kql"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "runAt",
+    "windowDays",
+    "results",
+    "queries"
+  ],
+  "additionalProperties": false
+}

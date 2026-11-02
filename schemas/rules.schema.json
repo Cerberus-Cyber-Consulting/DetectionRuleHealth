@@ -1,0 +1,131 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/rules.schema.json",
+  "title": "Detection rules collected from Sentinel (ARM), Defender XDR (Graph beta) or markdown (offline)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string",
+      "description": "Tenant alias = folder name under data/"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "generatedAt",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "description": "Sentinel: alert rule resource name (GUID). Defender: detectionRule id. Markdown: md:<relative path>#<1-based KQL block index>"
+        },
+        "source": {
+          "enum": [
+            "sentinel",
+            "defender",
+            "markdown"
+          ]
+        },
+        "kind": {
+          "type": "string",
+          "description": "Sentinel: Scheduled, NRT, Fusion, MicrosoftSecurityIncidentCreation, ... Defender: customDetection. Markdown: the block heading"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "enabled",
+            "disabled",
+            "autoDisabled"
+          ],
+          "description": "Defender only: the rule's status. autoDisabled = Defender switched the rule off after repeated failures; enabled is then false"
+        },
+        "severity": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "queryText": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null for rule kinds without KQL"
+        },
+        "frequency": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "ISO-8601 duration"
+        },
+        "lastModifiedAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "schemaContext": {
+          "enum": [
+            "unified",
+            "sentinel",
+            "xdr"
+          ],
+          "description": "Which table schema the query must bind against"
+        },
+        "origin": {
+          "type": "string",
+          "description": "ARM resource id, Graph URL or file path"
+        }
+      },
+      "required": [
+        "ruleId",
+        "source",
+        "kind",
+        "displayName",
+        "enabled",
+        "queryText",
+        "schemaContext"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

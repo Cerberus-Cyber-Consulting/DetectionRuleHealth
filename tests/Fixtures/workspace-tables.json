@@ -1,0 +1,46 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/tables/SigninLogs",
+      "name": "SigninLogs",
+      "properties": {
+        "plan": "Analytics",
+        "totalRetentionInDays": 90,
+        "schema": {
+          "name": "SigninLogs",
+          "tableType": "Microsoft",
+          "columns": null,
+          "standardColumns": [
+            { "name": "TimeGenerated", "type": "dateTime" },
+            { "name": "UserPrincipalName", "type": "string" },
+            { "name": "ConditionalAccessPolicies", "type": "dynamic" },
+            { "name": "IsInteractive", "type": "boolean" },
+            { "name": "DurationMs", "type": "long" },
+            { "name": "CorrelationId", "type": "guid" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/tables/MyApp_CL",
+      "name": "MyApp_CL",
+      "properties": {
+        "plan": "Basic",
+        "schema": {
+          "name": "MyApp_CL",
+          "tableType": "CustomLog",
+          "columns": [
+            { "name": "Action", "type": "string" },
+            { "name": "Score", "type": "real" },
+            { "name": "Count", "type": "int" }
+          ],
+          "standardColumns": [
+            { "name": "TimeGenerated", "type": "dateTime" },
+            { "name": "TenantId", "type": "guid" }
+          ]
+        }
+      }
+    }
+  ],
+  "nextLink": null
+}

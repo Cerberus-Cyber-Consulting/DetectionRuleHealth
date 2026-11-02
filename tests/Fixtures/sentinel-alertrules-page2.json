@@ -1,0 +1,32 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules/a1b2c3d4-0000-4000-8000-000000000002",
+      "name": "a1b2c3d4-0000-4000-8000-000000000002",
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "kind": "NRT",
+      "properties": {
+        "displayName": "Break-glass account sign-in",
+        "description": "Sign-in by an emergency access account.",
+        "severity": "Medium",
+        "enabled": false,
+        "query": "SigninLogs\n| where UserPrincipalName in~ (\"bg1@contoso.com\", \"bg2@contoso.com\")",
+        "lastModifiedUtc": "2026-07-15T08:30:00Z"
+      }
+    },
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules/BuiltInFusion",
+      "name": "BuiltInFusion",
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "kind": "Fusion",
+      "properties": {
+        "alertRuleTemplateName": "f71aba3d-28fb-450b-b192-4e76a83015c8",
+        "displayName": "Advanced Multistage Attack Detection",
+        "description": "Microsoft Sentinel uses Fusion ...",
+        "severity": "High",
+        "enabled": true,
+        "lastModifiedUtc": "2026-01-01T00:00:00Z"
+      }
+    }
+  ]
+}

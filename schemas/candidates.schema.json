@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/candidates.schema.json",
+  "title": "Value checks extracted from rule queries (output of `rulehealth extract`)",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string",
+      "description": "Tenant alias = folder name under data/"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "schemaSource": {
+      "type": "string"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "unresolved": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "RuntimeValue",
+              "UnboundExpression",
+              "ComputedColumn"
+            ]
+          },
+          "operator": {
+            "type": "string"
+          },
+          "expression": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ruleId",
+          "status",
+          "expression"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "ruleSummaries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string"
+          },
+          "comparisons": {
+            "type": "integer"
+          },
+          "checks": {
+            "type": "integer"
+          },
+          "nullChecks": {
+            "type": "integer"
+          },
+          "unresolved": {
+            "type": "integer"
+          },
+          "bindErrors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tables": {
+            "type": "array",
+            "description": "Schema tables the query reads (bound table references: plain, union, join, let, table('X'), wildcards), sorted. Tables not in the schema are bind errors and not listed. Missing in files from before this field existed.",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "ruleId",
+          "comparisons",
+          "checks",
+          "nullChecks",
+          "unresolved",
+          "bindErrors"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "generatedAt",
+    "schemaSource",
+    "checks",
+    "unresolved",
+    "ruleSummaries"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "check": {
+      "type": "object",
+      "properties": {
+        "checkId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        },
+        "table": {
+          "type": "string"
+        },
+        "column": {
+          "type": "string"
+        },
+        "path": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Property path inside a dynamic column, e.g. AdditionalFields.Foo"
+        },
+        "operatorClass": {
+          "enum": [
+            "eq",
+            "eq_ci",
+            "has",
+            "has_cs",
+            "contains",
+            "contains_cs",
+            "startswith",
+            "startswith_cs",
+            "endswith",
+            "endswith_cs",
+            "hasprefix",
+            "hasprefix_cs",
+            "hassuffix",
+            "hassuffix_cs",
+            "regex",
+            "like",
+            "like_cs"
+          ]
+        },
+        "value": {
+          "type": "string"
+        },
+        "lineage": {
+          "enum": [
+            "direct",
+            "renamed",
+            "expression"
+          ]
+        },
+        "validatable": {
+          "type": "boolean",
+          "description": "v1: true for direct/renamed. Expression lineage needs the rule's own column definition replayed (later)."
+        },
+        "occurrences": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "ruleId": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string",
+                "description": "Operator as written: ==, in~, !has, has_any, ..."
+              },
+              "negated": {
+                "type": "boolean",
+                "description": "Exclusion (!=, !in, !has...). A never-seen excluded value is a dead exclusion, not a broken rule."
+              },
+              "derivedColumn": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Name of the computed column in the rule when lineage is expression"
+              },
+              "derivedPath": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "columnDefinition": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Expression that defines derivedColumn"
+              },
+              "expression": {
+                "type": "string",
+                "description": "The comparison as it appears in the rule"
+              }
+            },
+            "required": [
+              "ruleId",
+              "operator",
+              "negated",
+              "expression"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "checkId",
+        "table",
+        "column",
+        "path",
+        "operatorClass",
+        "value",
+        "lineage",
+        "validatable",
+        "occurrences"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

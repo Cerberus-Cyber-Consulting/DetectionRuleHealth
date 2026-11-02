@@ -1,0 +1,1304 @@
+{
+  "schemaVersion": 1,
+  "tenant": "hybridbrothers",
+  "updatedAt": "2026-10-16T12:35:03Z",
+  "demo": true,
+  "decisions": {
+    "4dd2a44af069835a": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Copilot App"
+      }
+    },
+    "bafce7ef9e48b59f": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Microsoft Azure CLI"
+      }
+    },
+    "955c3830a52ab4dc": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Microsoft Azure PowerShell"
+      }
+    },
+    "31ae5aea46ffa9d1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Microsoft Edge Enterprise New Tab Page"
+      }
+    },
+    "b2766958cf87ed21": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Office 365 Management"
+      }
+    },
+    "19f14a7635bf1460": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Visual Studio - Legacy"
+      }
+    },
+    "95af2d6132d7ab0f": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Add member to group"
+      }
+    },
+    "a7ebdcebd2da99b9": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Add named location"
+      }
+    },
+    "640bf51bfad8ab39": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "Add service principal"
+      }
+    },
+    "079d6952a10df70e": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "Certificates and secrets management"
+      }
+    },
+    "ec4488e3dc143b0d": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Delete conditional access policy"
+      }
+    },
+    "fa56b24e66bf0f43": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "PIM activation"
+      }
+    },
+    "90a5149cc0f97236": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Remove member from group"
+      }
+    },
+    "790934d7d8e4ea84": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "Update application"
+      }
+    },
+    "f68c95698e5b0ef7": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "Update application – Certificates and secrets management"
+      }
+    },
+    "66a6235bad5347ae": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Update conditional access policy"
+      }
+    },
+    "178c92d68ea48eac": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Update named location"
+      }
+    },
+    "cb1db79d24398e68": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "completed"
+      }
+    },
+    "d0373edfacc92586": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "completed (PIM activation)"
+      }
+    },
+    "a9634f5013a63f6e": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Add member to role."
+      }
+    },
+    "f7988e9f4f54f822": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ExecuteToolByGateway"
+      }
+    },
+    "b1ac017659141709": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ExecuteToolByMCPServer"
+      }
+    },
+    "2b7a2d4703eddce5": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ExecuteToolBySDK"
+      }
+    },
+    "f535e51eb1b0fd42": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "InferenceCall"
+      }
+    },
+    "7647379595e7e5cc": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "CloudAppEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "InvokeAgent"
+      }
+    },
+    "e4a3315fbaf8e1c4": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "startswith",
+        "value": "AppControl"
+      }
+    },
+    "a8ae5367b3db8c57": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "FileCreated"
+      }
+    },
+    "0aef07dc7208d7d9": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceLogonEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "LogonSuccess"
+      }
+    },
+    "12eb09bc142936bb": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceLogonEvents",
+        "column": "LogonType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Network"
+      }
+    },
+    "94cf20dc322f9748": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "ConnectionAttempt"
+      }
+    },
+    "0a40399458b39fd8": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ConnectionFailed"
+      }
+    },
+    "d9df6c2a226b40f1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "ConnectionFailed"
+      }
+    },
+    "ee81a1f40fb1a1e1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "ConnectionRequest"
+      }
+    },
+    "0f6cfd1b7365263c": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ConnectionSuccess"
+      }
+    },
+    "e6d4d004e886ba48": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "startswith",
+        "value": "ConnectionSuccess"
+      }
+    },
+    "15f2bdb6b400d7fd": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "ConnectionSuccess"
+      }
+    },
+    "93da3bc52cf020a3": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "InboundConnection"
+      }
+    },
+    "37f9d1d60bd3f6cc": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "InboundConnectionAccepted"
+      }
+    },
+    "4323df4d9bc6e574": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "NetworkSignatureInspected"
+      }
+    },
+    "6b922cbcd7d6c7e8": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "NetworkSignatureInspected"
+      }
+    },
+    "fbd9644c1e32edc1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "135"
+      }
+    },
+    "a003b3b97a8b9f4c": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "137"
+      }
+    },
+    "450196700dd49090": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "22"
+      }
+    },
+    "e69c98ca6fb9150a": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "3389"
+      }
+    },
+    "620f48059c93edac": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "445"
+      }
+    },
+    "1ce91b60796892df": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "5900"
+      }
+    },
+    "5ededa6c7341ad70": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "5985"
+      }
+    },
+    "f5aaed3ea5e27160": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "RemotePort",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "5986"
+      }
+    },
+    "b725f091d0d636c1": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "-y"
+      }
+    },
+    "101aff090ad6285d": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "-z"
+      }
+    },
+    "f301224fbddba776": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "/y"
+      }
+    },
+    "1216db68acea5b7a": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "/z"
+      }
+    },
+    "f53bde2881457eb3": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessCommandLine",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "svchost.exe -k netsvcs -p -s Schedule"
+      }
+    },
+    "cdc3d6ae5e0e11f3": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "ProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "/create"
+      }
+    },
+    "df73100ea874ece1": {
+      "state": "ignore",
+      "note": "Attacker-specific command line, only expected in TP incidents",
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "ProcessCommandLine",
+        "path": null,
+        "operatorClass": "has",
+        "value": "schtasks"
+      }
+    },
+    "7d8a17eff24eca0a": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "IdentityLogonEvents",
+        "column": "Application",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Active Directory"
+      }
+    },
+    "796c7fa6a14789a1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "IdentityLogonEvents",
+        "column": "Protocol",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Kerberos"
+      }
+    },
+    "3c0e41408a75d981": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "CLI"
+      }
+    },
+    "29d0631b7a99265b": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "Command Line"
+      }
+    },
+    "ca5e66c5bb0f9642": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "Management Shell"
+      }
+    },
+    "8e6d973d45ff5bc6": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "has",
+        "value": "PowerShell"
+      }
+    },
+    "559a3f213a23ff41": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "ListeningConnectionCreated"
+      }
+    },
+    "ddcfd7c11e1225bb": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T04:00:00Z",
+      "check": {
+        "table": "DeviceEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "DriverLoaded"
+      }
+    },
+    "040502825327ca1a": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T09:57:22Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Add service principal"
+      }
+    },
+    "034ea686389236d1": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T09:57:22Z",
+      "check": {
+        "table": "AuditLogs",
+        "column": "OperationName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Add application"
+      }
+    },
+    "2111f532f34bdb46": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".bat"
+      }
+    },
+    "256a28f169aafb2e": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".cmd"
+      }
+    },
+    "21c0ebd250eff238": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".com"
+      }
+    },
+    "2f5ed264b46b52c2": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".cpl"
+      }
+    },
+    "ae157e228b2c3cba": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".dll"
+      }
+    },
+    "22fd99d9e0ee3be5": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".exe"
+      }
+    },
+    "a643b81a83638f32": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".msi"
+      }
+    },
+    "d67a106273fa590d": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".scr"
+      }
+    },
+    "b6dc2c8e44029a9e": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".vbs"
+      }
+    },
+    "1d8796143e443861": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-16T09:58:11Z",
+      "check": {
+        "table": "DeviceFileEvents",
+        "column": "FileName",
+        "path": null,
+        "operatorClass": "has",
+        "value": ".wsf"
+      }
+    },
+    "9d5826f72c73d612": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-16T12:35:03Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "AdditionalFields",
+        "path": "AdditionalFields.SignatureName",
+        "operatorClass": "eq_ci",
+        "value": "NTLM-Challenge"
+      }
+    },
+    "ac3ec68bf2674cbb": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AzureActivity",
+        "column": "CategoryValue",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Administrative"
+      }
+    },
+    "2f51c74197117e2c": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AzureActivity",
+        "column": "OperationNameValue",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "MICROSOFT.COMPUTE/VIRTUALMACHINES/EXTENSIONS/WRITE"
+      }
+    },
+    "3dd33da49084f525": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AzureActivity",
+        "column": "OperationNameValue",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "Microsoft.Compute/virtualMachines/runCommand/action"
+      }
+    },
+    "bcde051e5cf2fd32": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "BehaviorAnalytics",
+        "column": "ActivityInsights",
+        "path": "ActivityInsights.EventMessage",
+        "operatorClass": "has",
+        "value": "extensions/write"
+      }
+    },
+    "abda3dca2b5d15d8": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "BehaviorAnalytics",
+        "column": "ActivityInsights",
+        "path": "ActivityInsights.EventMessage",
+        "operatorClass": "has",
+        "value": "runCommand/action"
+      }
+    },
+    "3e665866aaba2e67": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "BehaviorAnalytics",
+        "column": "ActivityInsights",
+        "path": "ActivityInsights.FirstTimeUserPerformedAction",
+        "operatorClass": "eq",
+        "value": "True"
+      }
+    },
+    "e07bd835448cea89": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceNetworkEvents",
+        "column": "InitiatingProcessParentFileName",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "msiexec.exe"
+      }
+    },
+    "0ec48c7871a1fc85": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "InitiatingProcessFileName",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "msiexec.exe"
+      }
+    },
+    "8f24dadffe757ff0": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceProcessEvents",
+        "column": "ActionType",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "aggregated"
+      }
+    },
+    "d0c6d0b70104ba6a": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceInfo",
+        "column": "DeviceType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Server"
+      }
+    },
+    "dc58b2109033500c": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceInfo",
+        "column": "OSPlatform",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "Windows"
+      }
+    },
+    "638d1ad81604a2cc": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceInfo",
+        "column": "OnboardingStatus",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Onboarded"
+      }
+    },
+    "69a48f3de81b8649": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "MessageEvents",
+        "column": "ThreadType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "chat"
+      }
+    },
+    "6aadf2e6f965b9f1": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "MessageUrlInfo",
+        "column": "Url",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "http://dummy.jpg/"
+      }
+    },
+    "8120fd8418845a6c": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "AuthenticationProtocol",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "deviceCode"
+      }
+    },
+    "2d7dd8ddb38d4137": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "ResultSignature",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "SUCCESS"
+      }
+    },
+    "56ffeafb1aa319fe": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AuthenticationProtocol",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "deviceCode"
+      }
+    },
+    "aaed408d61273df4": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "ResultSignature",
+        "path": null,
+        "operatorClass": "eq_ci",
+        "value": "SUCCESS"
+      }
+    },
+    "0511e39ca115e3ac": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "ResourceIdentity",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "797f4846-ba00-4fd7-ba43-dac1f8f63013"
+      }
+    },
+    "c9bad1a2147fb1df": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "AADNonInteractiveUserSignInLogs",
+        "column": "UserAgent",
+        "path": null,
+        "operatorClass": "contains",
+        "value": "ur mum"
+      }
+    },
+    "1bb87ed92078367f": {
+      "state": "ignore",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "AppDisplayName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "Windows Sign In"
+      }
+    },
+    "b0bf4202f2d6c6e9": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "SigninLogs",
+        "column": "IncomingTokenType",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "primaryRefreshToken"
+      }
+    },
+    "37c769a152c5b886": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceTvmSoftwareInventory",
+        "column": "SoftwareName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "microsoft_azure_ad_connect"
+      }
+    },
+    "6ab40e5376350fc0": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceTvmSoftwareInventory",
+        "column": "SoftwareName",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "microsoft_entra_connect_sync"
+      }
+    },
+    "59e7dcc8485f5cc2": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceTvmSoftwareInventory",
+        "column": "SoftwareVendor",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "microsoft"
+      }
+    },
+    "12944a3515762727": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeProperties",
+        "path": "NodeProperties.rawData.hasAdLeakedCredentials",
+        "operatorClass": "eq",
+        "value": "true"
+      }
+    },
+    "5ae4cc8c107ed1f2": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeProperties",
+        "path": "NodeProperties.rawData.hasLeakedCredentials",
+        "operatorClass": "eq",
+        "value": "true"
+      }
+    },
+    "0839f79fb4b7c058": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeLabel",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "device"
+      }
+    },
+    "8f3738a7341431e4": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeLabel",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "microsoft.compute/virtualmachines"
+      }
+    },
+    "d38ee09216559337": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeLabel",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "user"
+      }
+    },
+    "5826277f0cfd64d3": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "ExposureGraphNodes",
+        "column": "NodeProperties",
+        "path": "NodeProperties.rawData.criticalityLevel.criticalityLevel",
+        "operatorClass": "eq",
+        "value": "0"
+      }
+    },
+    "bc8af544dd406c8d": {
+      "state": "validate",
+      "note": null,
+      "decidedAt": "2026-10-15T16:00:00Z",
+      "check": {
+        "table": "DeviceTvmBrowserExtensions",
+        "column": "IsActivated",
+        "path": null,
+        "operatorClass": "eq",
+        "value": "true"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+- group: Get started
+  items:
+    - { title: Overview, url: / }
+    - { title: Quick start, url: /quick-start/ }
+    - { title: Setup guide, url: /setup/ }
+    - { title: First run, url: /first-run/ }
+- group: Help
+  items:
+    - { title: Troubleshooting, url: /troubleshooting/ }
+- group: Project
+  items:
+    - { title: Privacy, url: /privacy/ }
+    - { title: Security, url: /security/ }
+    - { title: License, url: /license/ }

@@ -1,0 +1,16 @@
+<a class="skip" href="#main">Skip to content</a>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="{{ '/' | relative_url }}">
+      <img src="{{ '/assets/img/favicon.svg' | relative_url }}" alt="" width="30" height="30">
+      <span class="brand-text"><span class="brand-word">CERBERUS</span><span class="brand-name">Detection Rule Health</span></span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      {% assign top = "/quick-start/,/setup/,/first-run/,/troubleshooting/,/privacy/" | split: "," %}
+      {% for group in site.data.nav %}{% for item in group.items %}{% if top contains item.url %}
+      <a href="{{ item.url | relative_url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{{ item.title }}</a>
+      {% endif %}{% endfor %}{% endfor %}
+      <a class="gh" href="https://github.com/{{ site.repository }}">GitHub</a>
+    </nav>
+  </div>
+</header>

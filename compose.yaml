@@ -1,0 +1,29 @@
+# Detection Rule Health — recommended way to run with Docker Compose (or Podman Compose).
+#   docker compose up -d        then open http://localhost:5180
+#   docker compose pull && docker compose up -d     to upgrade (your data stays in the volume)
+name: detectionrulehealth
+
+services:
+  detectionrulehealth:
+    image: ghcr.io/cerberus-cyber-consulting/detectionrulehealth:beta
+    container_name: detectionrulehealth
+    ports:
+      # Only this computer can reach the app. Keep 127.0.0.1 and keep port 5180:
+      # the sign-in redirect URI is http://localhost:5180/auth/callback.
+      - "127.0.0.1:5180:5180"
+    volumes:
+      - drh-data:/data
+    environment:
+      # Set to "false" to turn off the daily check for a newer release on GitHub.
+      RULEHEALTH_UPDATE_CHECK: "true"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  drh-data:

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rulehealth.local/schemas/schema.schema.json",
+  "title": "Table schema snapshot used to bind rule queries",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "tenant": {
+      "type": "string",
+      "description": "Tenant alias = folder name under data/"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo": {
+      "type": "boolean",
+      "description": "True when the content is synthetic sample data, never set by the engine"
+    },
+    "source": {
+      "type": "string",
+      "description": "graph-hunting | arm-tables | file:<name>"
+    },
+    "tables": {
+      "type": "object",
+      "description": "tableName -> { columnName: kustoScalarType }. Case-sensitive.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": {
+          "enum": [
+            "string",
+            "int",
+            "long",
+            "real",
+            "decimal",
+            "bool",
+            "datetime",
+            "timespan",
+            "dynamic",
+            "guid"
+          ]
+        }
+      }
+    },
+    "tableInfo": {
+      "type": "object",
+      "description": "tableName -> where the table can be queried. Written by `collect`; `validate` routes queries with it. Absent in file-based schemas.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "workspaces": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Names of the tenant.json workspaces that have this table (ARM tables list)"
+          },
+          "plan": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Analytics | Basic | Auxiliary in the first workspace listed; null when not a workspace table. Basic/Auxiliary need the /search endpoint, billed per GB scanned"
+          },
+          "hunting": {
+            "type": "boolean",
+            "description": "Returned by the advanced hunting schema"
+          }
+        },
+        "required": [
+          "workspaces",
+          "plan",
+          "hunting"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Magic functions to stub: FileProfile, DeviceFromIP, _GetWatchlist"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "tenant",
+    "generatedAt",
+    "source",
+    "tables"
+  ],
+  "additionalProperties": false
+}

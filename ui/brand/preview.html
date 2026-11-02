@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RuleHealth brand specimen</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="cerberus-tokens.css">
+  <link rel="stylesheet" href="rulehealth-theme.css">
+  <!-- Specimen of every RuleHealth UI pattern in the Cerberus brand. Static sample values,
+       not tenant data. Served by `rulehealth serve` at /ui/brand/preview.html. -->
+</head>
+<body>
+<div class="rh-app">
+  <aside class="rh-sidebar">
+    <div class="rh-brand">
+      <img src="img/favicon.svg" alt="">
+      <div>
+        <div class="rh-brand-name">Detection Rule Health</div>
+      </div>
+    </div>
+    <nav class="rh-nav" aria-label="Main">
+      <div class="rh-nav-group">Monitor</div>
+      <button class="rh-nav-item is-active" aria-current="page"><i data-lucide="layout-dashboard"></i>Overview</button>
+      <button class="rh-nav-item"><i data-lucide="list-checks"></i>Rules</button>
+      <div class="rh-nav-group">Validate</div>
+      <button class="rh-nav-item"><i data-lucide="scan-line"></i>Value checks<span class="rh-nav-badge">42</span></button>
+      <button class="rh-nav-item"><i data-lucide="shield-check"></i>Validation<span class="rh-nav-badge is-crit">3</span></button>
+    </nav>
+    <div class="rh-side-foot">
+      <div class="rh-tenant">
+        <span class="rh-tenant-label">Tenant</span>
+        <label class="rh-select"><select aria-label="Tenant"><option>contoso</option><option>fabrikam</option></select></label>
+        <span class="rh-tenant-id">7c1a…e19f · ws sentinel-prod</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="rh-main">
+    <header class="rh-topbar">
+      <div class="rh-topbar-l">
+        <h1 class="rh-h1">Overview</h1>
+        <span class="rh-chip is-empty"><i data-lucide="flask-conical"></i>Demo data</span>
+      </div>
+      <div class="rh-topbar-r">
+        <label class="rh-search" style="width:300px"><i data-lucide="search"></i><input placeholder="Search rules, tables, values"></label>
+        <button class="rh-btn rh-btn--ghost rh-btn--sm"><i data-lucide="refresh-cw"></i>Reload</button>
+      </div>
+    </header>
+
+    <div class="rh-content">
+      <div class="rh-banner is-demo"><i data-lucide="flask-conical"></i>Demo data — not from a real tenant.</div>
+
+      <section class="rh-tiles" aria-label="Key figures">
+        <div class="rh-tile">
+          <div class="rh-tile-icon tone-info"><i data-lucide="list-checks"></i></div>
+          <div class="rh-tile-value">68 / 73</div>
+          <div class="rh-tile-label">Enabled rules</div>
+          <div class="rh-tile-sub">Sentinel 41 · Defender 27</div>
+        </div>
+        <div class="rh-tile">
+          <div class="rh-tile-icon tone-neutral"><i data-lucide="siren"></i></div>
+          <div class="rh-tile-value">683</div>
+          <div class="rh-tile-label">Incidents, 90 days</div>
+          <div class="rh-tile-sub">92% closed with a classification</div>
+        </div>
+        <div class="rh-tile">
+          <div class="rh-tile-icon tone-secure"><i data-lucide="shield-check"></i></div>
+          <div class="rh-tile-value">55</div>
+          <div class="rh-tile-label">Checks marked validate</div>
+          <div class="rh-tile-sub">of 162 validatable</div>
+        </div>
+        <div class="rh-tile">
+          <div class="rh-tile-icon tone-crit"><i data-lucide="octagon-alert"></i></div>
+          <div class="rh-tile-value">3</div>
+          <div class="rh-tile-label">Absent values</div>
+          <div class="rh-tile-sub">last validation, 30 days</div>
+        </div>
+      </section>
+
+      <div class="rh-grid-2">
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Efficacy</div>
+              <h2 class="rh-h2">Incidents per rule</h2>
+              <div class="rh-panel-sub">Top rules by incidents · counts next to every rate</div>
+            </div>
+            <div class="rh-seg" role="group" aria-label="Scale">
+              <button aria-pressed="true">Count</button><button aria-pressed="false">100 %</button>
+            </div>
+          </div>
+          <div id="chart-stack" class="rh-chart"></div>
+        </section>
+
+        <section class="rh-panel">
+          <div class="rh-panel-head">
+            <div>
+              <div class="rh-eyebrow">Noise map</div>
+              <h2 class="rh-h2">Volume vs noise</h2>
+              <div class="rh-panel-sub">Rules with ≥ 5 classified incidents</div>
+            </div>
+          </div>
+          <div id="chart-scatter" class="rh-chart"></div>
+        </section>
+      </div>
+
+      <section class="rh-panel">
+        <div class="rh-panel-head">
+          <div>
+            <div class="rh-eyebrow">Value checks</div>
+            <h2 class="rh-h2">DeviceNetworkEvents · ActionType</h2>
+            <div class="rh-panel-sub">Decide per value: must it always be present in normal telemetry?</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="rh-btn rh-btn--ghost rh-btn--sm">Validate all</button>
+            <button class="rh-btn rh-btn--ghost rh-btn--sm">Ignore all</button>
+            <button class="rh-btn rh-btn--primary rh-btn--sm"><i data-lucide="save"></i>Save decisions</button>
+          </div>
+        </div>
+        <div class="rh-table-wrap">
+          <table class="rh-table">
+            <thead><tr><th>Value</th><th>Operator</th><th class="is-num">Rules</th><th>Decision</th><th>Last verdict</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="is-primary rh-mono">ConnectionSuccess</td><td><span class="rh-op">==</span></td><td class="is-num">6</td>
+                <td><div class="rh-seg"><button aria-pressed="true" data-state="validate">Validate</button><button aria-pressed="false" data-state="ignore">Ignore</button><button aria-pressed="false">—</button></div></td>
+                <td><span class="rh-chip is-present"><i data-lucide="check"></i>Present · 412,880 · 2 min ago</span></td>
+              </tr>
+              <tr>
+                <td class="is-primary rh-mono">InboundConnection</td><td><span class="rh-op">contains</span></td><td class="is-num">1</td>
+                <td><div class="rh-seg"><button aria-pressed="true" data-state="validate">Validate</button><button aria-pressed="false" data-state="ignore">Ignore</button><button aria-pressed="false">—</button></div></td>
+                <td><span class="rh-chip is-absent"><i data-lucide="octagon-alert"></i>Absent · 30 days</span></td>
+              </tr>
+              <tr>
+                <td class="is-primary rh-mono">NetworkSignatureInspected</td><td><span class="rh-op">==</span></td><td class="is-num">2</td>
+                <td><div class="rh-seg"><button aria-pressed="false" data-state="validate">Validate</button><button aria-pressed="true" data-state="ignore">Ignore</button><button aria-pressed="false">—</button></div></td>
+                <td><span class="rh-chip is-skipped">Not validated</span></td>
+              </tr>
+              <tr>
+                <td class="is-primary rh-mono">IdentityDirectoryEvents</td><td><span class="rh-tag">table</span></td><td class="is-num">3</td>
+                <td><div class="rh-seg"><button aria-pressed="true" data-state="validate">Validate</button><button aria-pressed="false" data-state="ignore">Ignore</button><button aria-pressed="false">—</button></div></td>
+                <td><span class="rh-chip is-empty"><i data-lucide="database"></i>Table empty · connector?</span> <span class="rh-chip is-error"><i data-lucide="octagon-x"></i>Query error</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rh-panel">
+        <div class="rh-panel-head"><div><div class="rh-eyebrow">Rule detail</div><h2 class="rh-h2">Detect changes to Connect Sync application</h2></div></div>
+<pre class="rh-code">AuditLogs
+| extend AppName = tostring(TargetResources[0].displayName)
+| where AppName <span class="rh-hl is-validate">startswith "ConnectSyncProvisioning_"</span>
+| where OperationName <span class="rh-hl is-present">contains "Update application – Certificates and secrets management"</span>
+| where ModifiedProperties.displayName <span class="rh-hl is-absent">== "KeyDescription"</span>
+| where Reasons <span class="rh-hl is-unresolved">!= "[]"</span></pre>
+      </section>
+
+      <section class="rh-panel">
+        <div class="rh-panel-head"><div><div class="rh-eyebrow">Components</div><h2 class="rh-h2">Buttons, fields, chips, empty state</h2></div></div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+          <button class="rh-btn rh-btn--primary"><i data-lucide="play"></i>Run validation</button>
+          <button class="rh-btn rh-btn--secondary">Export</button>
+          <button class="rh-btn rh-btn--ghost">Cancel</button>
+          <button class="rh-btn rh-btn--primary" disabled>Saving…</button>
+          <label class="rh-field" style="width:260px"><i data-lucide="filter"></i><input placeholder="Filter by column"></label>
+          <span class="rh-chip tone-info"><i data-lucide="info"></i>Acknowledged rare</span>
+          <span class="rh-chip tone-warn">Valid, not seen in 30 days</span>
+          <span class="rh-chip tone-crit">Removed by Microsoft · 2026-02-27</span>
+          <span class="rh-chip tone-neutral">Can't verify</span>
+          <span class="rh-tag">Sentinel</span><span class="rh-tag">Defender</span>
+        </div>
+        <div class="rh-empty"><strong>No validation results yet</strong>Mark values as Validate, then run <span class="rh-mono">rulehealth validate --tenant contoso</span>.</div>
+      </section>
+
+      <!-- Step 3b (2026-10-28): rh-options > rh-option, a choice as cards. Selected = accent border, no fill. -->
+      <section class="rh-panel">
+        <div class="rh-panel-head"><div><div class="rh-eyebrow">Components · options</div><h2 class="rh-h2">Option cards</h2>
+          <div class="rh-panel-sub">rh-options &gt; rh-option: radio, title, chip and one sentence. Hover adds the hover wash; keyboard focus outlines the whole card.</div></div></div>
+        <fieldset class="rh-options" style="max-width:640px">
+          <legend class="rh-sr-only">Sign-in option</legend>
+          <label class="rh-option"><input type="radio" name="spec-option" checked>
+            <span><b>Your own app registration</b> <span class="rh-chip tone-info rh-chip--sm">Recommended</span>
+              <span class="rh-option-text">Selected: accent border. Consent covers only this tool.</span></span></label>
+          <label class="rh-option"><input type="radio" name="spec-option">
+            <span><b>Microsoft's apps</b> <span class="rh-chip tone-neutral rh-chip--sm">Quick start</span>
+              <span class="rh-option-text">Not selected: the chip keeps its contrast in both states (no fill on selection).</span></span></label>
+        </fieldset>
+      </section>
+
+      <!-- M8 setup wizard (2026-10-28): step indicator (topbar) and a job's stage list. -->
+      <section class="rh-panel">
+        <div class="rh-panel-head"><div><div class="rh-eyebrow">Components · setup wizard</div><h2 class="rh-h2">Step indicator and job stages</h2>
+          <div class="rh-panel-sub">rh-stepper: done steps link back (check, accent ring), the current step has the active fill, later steps are plain. rh-stages: one row per stage, state in icon shape and text.</div></div></div>
+        <div class="rh-topbar" style="position:static;margin:0 0 20px">
+          <div class="rh-topbar-l">
+            <h1 class="rh-h1">Connect a tenant</h1>
+            <ol class="rh-stepper" aria-label="Setup steps">
+              <li class="rh-stepper-item is-done"><a href="#" class="rh-stepper-link"><span class="rh-stepper-num"><i data-lucide="check" class="rh-icon"></i></span><span class="rh-stepper-label">Welcome</span></a></li>
+              <li class="rh-stepper-item is-done"><a href="#" class="rh-stepper-link"><span class="rh-stepper-num"><i data-lucide="check" class="rh-icon"></i></span><span class="rh-stepper-label">How to sign in</span></a></li>
+              <li class="rh-stepper-item is-current" aria-current="step"><span class="rh-stepper-link"><span class="rh-stepper-num">3</span><span class="rh-stepper-label">Sign in</span></span></li>
+              <li class="rh-stepper-item"><span class="rh-stepper-link"><span class="rh-stepper-num">4</span><span class="rh-stepper-label">Workspaces</span></span></li>
+              <li class="rh-stepper-item"><span class="rh-stepper-link"><span class="rh-stepper-num">5</span><span class="rh-stepper-label">Collect</span></span></li>
+              <li class="rh-stepper-item"><span class="rh-stepper-link"><span class="rh-stepper-num">6</span><span class="rh-stepper-label">Done</span></span></li>
+            </ol>
+          </div>
+        </div>
+        <div class="rh-grid-2">
+          <ol class="rh-stages">
+            <li class="rh-stage is-succeeded" title="Succeeded"><i data-lucide="circle-check" class="rh-icon"></i><span class="rh-stage-name">Microsoft Sentinel analytics rules</span><span class="rh-stage-count">212</span><span class="rh-stage-detail">212 rules in 2 workspaces</span></li>
+            <li class="rh-stage is-failed" title="Failed"><i data-lucide="octagon-x" class="rh-icon"></i><span class="rh-stage-name">Defender XDR custom detections</span><span class="rh-stage-count"></span><span class="rh-stage-detail">List Defender custom detection rules failed: HTTP 403 Forbidden</span><span class="rh-stage-hint">Needs CustomDetection.Read.All and Security Reader.</span></li>
+            <li class="rh-stage is-running" title="Running"><i data-lucide="refresh-cw" class="rh-icon"></i><span class="rh-stage-name">Incidents</span><span class="rh-stage-count"></span></li>
+            <li class="rh-stage is-pending" title="Waiting"><i data-lucide="circle-dashed" class="rh-icon"></i><span class="rh-stage-name">Rule statistics</span><span class="rh-stage-count"></span></li>
+            <li class="rh-stage is-skipped" title="Skipped"><i data-lucide="circle-minus" class="rh-icon"></i><span class="rh-stage-name">Value checks</span><span class="rh-stage-count"></span><span class="rh-stage-detail">Left out on request</span></li>
+            <li class="rh-stage is-cancelled" title="Cancelled"><i data-lucide="circle-slash" class="rh-icon"></i><span class="rh-stage-name">Table schema</span><span class="rh-stage-count"></span><span class="rh-stage-detail">Cancelled</span></li>
+          </ol>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-content:flex-start">
+            <span class="rh-chip tone-info"><i data-lucide="refresh-cw"></i>Running</span>
+            <span class="rh-chip tone-info"><i data-lucide="check"></i>Succeeded</span>
+            <span class="rh-chip tone-crit"><i data-lucide="octagon-x"></i>Failed</span>
+            <span class="rh-chip tone-neutral"><i data-lucide="circle-slash"></i>Cancelled</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="../vendor/lucide-1.52.0.min.js"></script>
+<script src="../vendor/echarts-5.6.0.min.js"></script>
+<script src="echarts-cerberus.js"></script>
+<script src="preview.js"></script>
+</body>
+</html>

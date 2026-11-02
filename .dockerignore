@@ -1,0 +1,22 @@
+# Keep the build context small and free of local data.
+**/bin/
+**/obj/
+**/TestResults/
+.git/
+.github/
+.vs/
+.vscode/
+.claude/
+.build/
+design/
+docs/
+tests/
+tools/
+data/
+**/*.user
+**/*.tmp
+**/*.bak
+*.md
+!THIRD-PARTY-NOTICES.md
+# brand specimen (development only, not part of the app)
+ui/brand/preview.*

@@ -1,0 +1,38 @@
+{
+  "value": [
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules/73e01a99-5cd7-4139-a149-9f2736ff2ab5",
+      "name": "73e01a99-5cd7-4139-a149-9f2736ff2ab5",
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "kind": "Scheduled",
+      "etag": "\"0300bf09-0000-0000-0000-5c37296e0000\"",
+      "properties": {
+        "displayName": "Suspicious PowerShell download",
+        "description": "",
+        "severity": "High",
+        "enabled": true,
+        "query": "DeviceProcessEvents\n| where ActionType == \"ProcessCreated\"\n| where FileName =~ \"powershell.exe\"",
+        "queryFrequency": "PT1H",
+        "queryPeriod": "P2DT1H30M",
+        "triggerOperator": "GreaterThan",
+        "triggerThreshold": 0,
+        "lastModifiedUtc": "2026-09-01T10:00:00.0000000Z"
+      }
+    },
+    {
+      "id": "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules/microsoftSecurityIncidentCreationRuleExample",
+      "name": "microsoftSecurityIncidentCreationRuleExample",
+      "type": "Microsoft.SecurityInsights/alertRules",
+      "kind": "MicrosoftSecurityIncidentCreation",
+      "properties": {
+        "productFilter": "Microsoft Cloud App Security",
+        "displayName": "testing displayname",
+        "description": null,
+        "enabled": true,
+        "severitiesFilter": ["High"],
+        "lastModifiedUtc": "2026-08-10T11:02:34.0000000Z"
+      }
+    }
+  ],
+  "nextLink": "https://management.azure.com/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-sentinel/providers/Microsoft.OperationalInsights/workspaces/law-Sentinel/providers/Microsoft.SecurityInsights/alertRules?api-version=2025-09-01&$skipToken=page2"
+}

@@ -1,0 +1,9 @@
+{
+  "error": "interaction_required",
+  "error_description": "AADSTS50076: Due to a configuration change made by your administrator, or because you moved to a new location, you must use multi-factor authentication to access the resource. Trace ID: 00000000-0000-0000-0000-000000000002 Correlation ID: 00000000-0000-0000-0000-0000000000c2 Timestamp: 2026-10-27 08:00:00Z",
+  "error_codes": [50076],
+  "timestamp": "2026-10-27 08:00:00Z",
+  "trace_id": "00000000-0000-0000-0000-000000000002",
+  "correlation_id": "00000000-0000-0000-0000-0000000000c2",
+  "suberror": "basic_action"
+}

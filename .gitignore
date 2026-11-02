@@ -1,0 +1,22 @@
+# tenant output — never commit customer data
+data/
+# third-party schema files must never enter this repo
+schemas-local/
+environments.json
+# .NET
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+# atomic-write leftovers
+*.tmp
+*.bak
+# Jekyll (docs/ local preview)
+docs/_site/
+docs/.jekyll-cache/
+docs/.jekyll-metadata
+# screenshots taken against a real tenant go here, never in docs/
+screens-private/
+# local build output
+.build/
