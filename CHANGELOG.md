@@ -14,6 +14,8 @@ into its GitHub Release.
 - The documentation site moved to <https://detectionhealth.cerberuscyberconsulting.com>. Links in
   the app, README, container image label, release notes and setup script point there; the privacy
   statement names the new address.
+- The first-run guide shows the rule detail page, with absent and present values highlighted in the
+  rule query.
 
 ### Fixed
 
