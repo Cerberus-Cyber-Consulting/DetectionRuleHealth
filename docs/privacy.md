@@ -124,9 +124,3 @@ names, workspace names, rule queries of customers, incident details or screensho
 Changes to this statement are listed in the [changelog](https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth/blob/main/CHANGELOG.md) and dated at the top.
 If a new version starts calling a new host or storing a new kind of data, this statement is updated
 in the same release.
-
-## Contact
-
-Cerberus Cyber Consulting BV, Belgium — <https://cerberuscyberconsulting.com>.
-Questions about this statement: open a GitHub issue (no tenant data, please). Security problems:
-see the [security policy](https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth/blob/main/SECURITY.md).
