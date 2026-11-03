@@ -46,7 +46,7 @@
     pwsh ./tools/New-DrhAppRegistration.ps1 -RestrictToAssignedUsers
 
 .NOTES
-    Part of Detection Rule Health (MIT). https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/
+    Part of Detection Rule Health (MIT). https://detectionhealth.cerberuscyberconsulting.com/setup/
 #>
 [CmdletBinding(SupportsShouldProcess)]
 param(

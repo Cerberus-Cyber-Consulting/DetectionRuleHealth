@@ -198,7 +198,7 @@ const JOB_LABELS = {
 };
 
 // Public pages the UI links to (navigation only: nothing is loaded from these hosts).
-const DOCS_URL = 'https://cerberus-cyber-consulting.github.io/DetectionRuleHealth';
+const DOCS_URL = 'https://detectionhealth.cerberuscyberconsulting.com';
 const REPO_URL = 'https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth';
 
 // Setup wizard (#/setup/<step>, skill rulehealth-onboarding). Which step a tenant is at comes from the

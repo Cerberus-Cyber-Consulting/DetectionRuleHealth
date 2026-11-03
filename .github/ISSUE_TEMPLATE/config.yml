@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth/security/advisories/new
     about: Report privately. Please do not open a public issue for security problems.
   - name: Setup guide and troubleshooting
-    url: https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/troubleshooting/
+    url: https://detectionhealth.cerberuscyberconsulting.com/troubleshooting/
     about: Most sign-in errors (AADSTS…) are explained here.

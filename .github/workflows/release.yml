@@ -122,7 +122,7 @@ jobs:
           Digest: \`${DIGEST}\` (linux/amd64, linux/arm64). Verify with
           \`gh attestation verify oci://${IMAGE}:${VERSION} -R ${GITHUB_REPOSITORY}\`.
 
-          Setup guide: https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/
+          Setup guide: https://detectionhealth.cerberuscyberconsulting.com/setup/
           NOTES
       - uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
