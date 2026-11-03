@@ -1,6 +1,6 @@
 # Privacy statement
 
-*Detection Rule Health — effective for version 0.1.0-beta.1 and later, last updated 2026-11-01.*
+*Detection Rule Health — effective for version 0.1.0-beta.1 and later, last updated 2026-11-03.*
 
 Detection Rule Health is software you run yourself. Cerberus Cyber Consulting BV ("we") publishes
 the source code and the container image. **We do not operate any service for it, we do not receive
@@ -105,7 +105,7 @@ is handled, as you would for any other tool you run.
 
 ## The documentation website
 
-The documentation site (`cerberus-cyber-consulting.github.io/DetectionRuleHealth`) is hosted by
+The documentation site (`detectionhealth.cerberuscyberconsulting.com`) is hosted by
 GitHub Pages. It uses no cookies, analytics or third-party scripts, and loads no external fonts.
 GitHub may log technical data such as IP addresses when serving it; see GitHub's privacy statement.
 

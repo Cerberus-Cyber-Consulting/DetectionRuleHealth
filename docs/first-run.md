@@ -101,7 +101,11 @@ again for another tenant.
     days of your data. **Data** shows the exact queries first; reviewing them sends nothing. The
     **Validation** page then shows each value as *present*, *absent*, *table empty* (often a connector
     or retention problem) or *error*.
-4.  Run **Collect again** from Settings whenever you want fresh numbers. The app does not run on a
+4.  **Rules** lists every rule with its health; click one for its detail. The query shows every
+    extracted comparison highlighted with its state: red when a validated value was *absent*, green
+    when it was *present*, dashed when only some values of a list occurred. Right-click a highlight
+    to validate or ignore its values right there.
+5.  Run **Collect again** from Settings whenever you want fresh numbers. The app does not run on a
     schedule.
 
 {% assign shot = site.static_files | where: "path", "/assets/img/screens/checks.png" | first %}
@@ -112,6 +116,16 @@ again for another tenant.
 {% assign shot = site.static_files | where: "path", "/assets/img/screens/rules.png" | first %}
 {% if shot %}
 <div class="shot"><img src="{{ '/assets/img/screens/rules.png' | relative_url }}" alt="Rules page with demo data: every rule with its health, incidents, classification split and value checks" width="1440" height="900" loading="lazy"></div>
+{% endif %}
+
+{% assign shot = site.static_files | where: "path", "/assets/img/screens/rule-detail.png" | first %}
+{% if shot %}
+<div class="shot"><img src="{{ '/assets/img/screens/rule-detail.png' | relative_url }}" alt="Rule detail with demo data: the LolDriver rule with one absent value, its incidents, classification split and value checks" width="1440" height="900" loading="lazy"></div>
+{% endif %}
+
+{% assign shot = site.static_files | where: "path", "/assets/img/screens/rule-query.png" | first %}
+{% if shot %}
+<div class="shot"><img src="{{ '/assets/img/screens/rule-query.png' | relative_url }}" alt="Rule query with demo data: ActionType == &quot;DriverLoaded&quot; highlighted red as absent, ActionType == &quot;FileCreated&quot; highlighted green as present" width="1440" height="900" loading="lazy"></div>
 {% endif %}
 
 {: .note}

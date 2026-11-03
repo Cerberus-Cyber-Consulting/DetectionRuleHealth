@@ -45,7 +45,7 @@ LABEL org.opencontainers.image.title="Detection Rule Health" \
       org.opencontainers.image.vendor="Cerberus Cyber Consulting BV" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.source="https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth" \
-      org.opencontainers.image.documentation="https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/" \
+      org.opencontainers.image.documentation="https://detectionhealth.cerberuscyberconsulting.com/" \
       org.opencontainers.image.version="${VERSION}"
 
 COPY --from=build /out/rulehealth          /app/rulehealth

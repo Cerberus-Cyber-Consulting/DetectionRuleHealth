@@ -15,9 +15,9 @@
 </p>
 
 <p align="center">
-  <a href="https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/">Documentation</a> ·
-  <a href="https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/quick-start/">Quick start</a> ·
-  <a href="https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/">Setup guide</a> ·
+  <a href="https://detectionhealth.cerberuscyberconsulting.com/">Documentation</a> ·
+  <a href="https://detectionhealth.cerberuscyberconsulting.com/quick-start/">Quick start</a> ·
+  <a href="https://detectionhealth.cerberuscyberconsulting.com/setup/">Setup guide</a> ·
   <a href="PRIVACY.md">Privacy</a> ·
   <a href="https://github.com/Cerberus-Cyber-Consulting/DetectionRuleHealth/releases">Releases</a>
 </p>
@@ -63,12 +63,12 @@ Or with Compose: download [`compose.yaml`](compose.yaml) and run `docker compose
 - **Your own app registration (recommended).** One single-tenant app registration in your own tenant,
   platform *Mobile and desktop applications*, redirect URI `http://localhost:5180/auth/callback`, no
   secret. Run [`tools/New-DrhAppRegistration.ps1`](tools/New-DrhAppRegistration.ps1) (Azure CLI) or
-  follow the [portal steps](https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/#create-the-app-registration),
+  follow the [portal steps](https://detectionhealth.cerberuscyberconsulting.com/setup/#create-the-app-registration),
   then grant admin consent. Consent covers this tool only.
 - **Microsoft's apps (quick start).** No app registration: the app signs in as Microsoft Graph Command
   Line Tools and Microsoft Azure PowerShell. An administrator still consents to the security
   permissions, and that consent then also applies to everyone's Graph PowerShell in the tenant.
-  [Compare the options](https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/#choose-how-to-sign-in).
+  [Compare the options](https://detectionhealth.cerberuscyberconsulting.com/setup/#choose-how-to-sign-in).
 
 **3. Open <http://localhost:5180>**
 
@@ -125,7 +125,7 @@ The app shows a notice when a newer release is available. It never updates itsel
   port mapping so only your own computer can reach the app.
 - **Docker Desktop licensing:** Docker Desktop is free for personal use and small businesses, but
   larger organisations need a paid subscription. Podman Desktop, Rancher Desktop and Docker Engine
-  (also inside WSL2) work without one. See the [setup guide](https://cerberus-cyber-consulting.github.io/DetectionRuleHealth/setup/#container-runtime).
+  (also inside WSL2) work without one. See the [setup guide](https://detectionhealth.cerberuscyberconsulting.com/setup/#container-runtime).
 - Classification rates are only as good as how consistently your SOC classifies incidents.
 - Advanced hunting looks back at most 30 days, so value checks cover 30 days at most.
 

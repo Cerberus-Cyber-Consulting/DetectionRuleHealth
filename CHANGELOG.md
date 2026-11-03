@@ -7,6 +7,20 @@ into its GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.0-beta.2] - 2026-11-03
+
+### Changed
+
+- The documentation site moved to <https://detectionhealth.cerberuscyberconsulting.com>. Links in
+  the app, README, container image label, release notes and setup script point there; the privacy
+  statement names the new address.
+- The first-run guide shows the rule detail page, with absent and present values highlighted in the
+  rule query.
+
+### Fixed
+
+- Styles, scripts and images on the documentation site did not load on the custom domain.
+
 ## [0.1.0-beta.1] - 2026-11-02
 
 First public beta.
